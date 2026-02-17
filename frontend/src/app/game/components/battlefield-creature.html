@@ -33,8 +33,13 @@
   }
 
   <div class="bf-stats">
-    <span class="bf-atk">{{ creature().attack }}</span>
-    <span class="bf-sep">/</span>
-    <span class="bf-hp" [class.hurt]="isDamaged()">{{ creature().health }}</span>
+    <div class="bf-stat-badge atk">
+      <span class="stat-icon">⚔️</span>
+      <span class="stat-value">{{ creature().attack }}</span>
+    </div>
+    <div class="bf-stat-badge hp" [class.hurt]="isDamaged()">
+      <span class="stat-icon">❤️</span>
+      <span class="stat-value">{{ creature().health }}</span>
+    </div>
   </div>
 </div>

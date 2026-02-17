@@ -16,7 +16,7 @@
   <div class="card-name">{{ card().name }}</div>
 
   <!-- Keywords -->
-  @if (card().keywords?.length) {
+  @if (card().keywords.length) {
     <div class="card-keywords">
       @for (kw of card().keywords; track kw) {
         <span class="keyword-badge">{{ kw }}</span>
@@ -32,9 +32,14 @@
   <!-- Stats (Creatures) -->
   @if (isCreature()) {
     <div class="card-stats">
-      <span class="stat atk">{{ card().attack }}</span>
-      <span class="stat-sep">/</span>
-      <span class="stat hp">{{ card().health }}</span>
+      <div class="stat-badge atk">
+        <span class="stat-icon">⚔️</span>
+        <span class="stat-value">{{ card().attack }}</span>
+      </div>
+      <div class="stat-badge hp">
+        <span class="stat-icon">❤️</span>
+        <span class="stat-value">{{ card().health }}</span>
+      </div>
     </div>
   }
 
