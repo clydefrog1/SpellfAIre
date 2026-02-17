@@ -1,0 +1,7 @@
+<main class="sf-page sf-page-wide">
+  <h1 class="sf-title">SpellfAIre</h1>
+
+  <p *ngIf="user() as u">Logged in as <strong>{{ u.username }}</strong> ({{ u.email }})</p>
+
+  <button class="sf-button" type="button" (click)="logout()">Logout</button>
+</main>

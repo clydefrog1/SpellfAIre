@@ -1,0 +1,379 @@
+/* SpellfAIre Global Theme — Ancient Stone */
+
+/*
+  Dark mystical aesthetic: Cool slate stone with golden rune accents.
+  Modern glassmorphism UI for sophisticated fantasy spell-casting experience.
+*/
+
+:root {
+  /* Background */
+  --sf-bg: #0d1213;
+
+  /* Surface */
+  --sf-surface: #182024;
+  --sf-surface-2: #242e34;
+  --sf-border: #3c4d55;
+
+  /* Text */
+  --sf-text: #ecf3f5;
+  --sf-text-muted: #b0c5cc;
+  --sf-text-light: #758a94;
+
+  /* Accent (golden runes) */
+  --sf-accent: #d9a35a;
+  --sf-accent-hover: #f0b866;
+  --sf-accent-dark: #b88a45;
+
+  /* Functional Colors */
+  --sf-danger: #cc7766;
+  --sf-success: #72b894;
+  --sf-focus: #8ec9d9;
+  
+  /* Shadows & Effects */
+  --sf-shadow-light: rgba(0, 0, 0, 0.3);
+  --sf-shadow-med: rgba(0, 0, 0, 0.5);
+  --sf-glow-gold: rgba(217, 163, 90, 0.25);
+  --sf-glow-cyan: rgba(142, 201, 217, 0.2);
+
+  /* Spacing Scale */
+  --sf-space-xs: 4px;
+  --sf-space-sm: 8px;
+  --sf-space-md: 12px;
+  --sf-space-lg: 16px;
+  --sf-space-xl: 24px;
+  --sf-space-2xl: 32px;
+  --sf-space-3xl: 48px;
+
+  /* Border Radius */
+  --sf-radius-sm: 4px;
+  --sf-radius: 6px;
+  --sf-radius-lg: 10px;
+
+  /* Typography */
+  --sf-font-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --sf-font-size-sm: 14px;
+  --sf-font-size-base: 16px;
+  --sf-font-size-lg: 20px;
+  --sf-font-size-xl: 26px;
+  --sf-line-height-tight: 1.25;
+  --sf-line-height-base: 1.5;
+  --sf-line-height-relaxed: 1.75;
+
+  /* Transitions */
+  --sf-transition: 150ms ease-out;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--sf-font-base);
+  font-size: var(--sf-font-size-base);
+  line-height: var(--sf-line-height-base);
+  color: var(--sf-text);
+  background-color: var(--sf-bg);
+
+  /* Modern atmospheric dark background */
+  background-image:
+    url('/assets/fantasy/vignette-overlay.svg'),
+    radial-gradient(1200px 800px at 15% 20%, var(--sf-glow-gold) 0%, transparent 60%),
+    radial-gradient(1000px 700px at 85% 30%, rgba(142, 201, 217, 0.08) 0%, transparent 65%),
+    radial-gradient(800px 600px at 50% 100%, rgba(36, 46, 52, 0.4) 0%, transparent 70%),
+    linear-gradient(135deg, #0d1213 0%, #151d20 40%, #0f1517 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 650;
+  line-height: var(--sf-line-height-tight);
+  color: var(--sf-text);
+}
+
+p {
+  margin: var(--sf-space-md) 0;
+}
+
+strong {
+  font-weight: 700;
+}
+
+a {
+  color: var(--sf-accent);
+  text-decoration: none;
+  transition: color var(--sf-transition), text-shadow var(--sf-transition);
+}
+
+a:hover {
+  color: var(--sf-accent-hover);
+  text-shadow: 0 0 8px var(--sf-glow-gold);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--sf-focus);
+  outline-offset: 2px;
+  border-radius: var(--sf-radius);
+}
+
+/* Shared Page & Layout Classes */
+
+.sf-page {
+  max-width: 520px;
+  margin: var(--sf-space-3xl) auto;
+  padding: 0 var(--sf-space-lg);
+  position: relative;
+  color: var(--sf-text);
+}
+
+.sf-page-wide {
+  max-width: 720px;
+}
+
+.sf-title {
+  font-size: var(--sf-font-size-xl);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--sf-space-lg);
+  color: var(--sf-text);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(217, 163, 90, 0.15);
+}
+
+/* Card / Form Container - Modern Glassmorphism */
+
+.sf-card {
+  display: grid;
+  gap: var(--sf-space-md);
+  padding: var(--sf-space-xl);
+  border: 1px solid rgba(60, 77, 85, 0.5);
+  border-radius: var(--sf-radius-lg);
+  background: linear-gradient(145deg, rgba(24, 32, 36, 0.85) 0%, rgba(36, 46, 52, 0.75) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--sf-text);
+  
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(142, 201, 217, 0.1),
+    0 0 0 1px rgba(217, 163, 90, 0.05);
+  position: relative;
+}
+
+.sf-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--sf-radius-lg);
+  background: radial-gradient(
+    ellipse 800px 600px at 50% 0%,
+    rgba(217, 163, 90, 0.08) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.sf-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--sf-radius-lg);
+  background-image: url('/assets/fantasy/rune-ornament.svg');
+  background-repeat: repeat;
+  background-size: 180px 180px;
+  opacity: 0.03;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Form */
+
+.sf-field {
+  display: grid;
+  gap: var(--sf-space-sm);
+}
+
+.sf-field-label {
+  display: block;
+  font-size: var(--sf-font-size-base);
+  font-weight: 600;
+  color: var(--sf-text);
+}
+
+.sf-input {
+  padding: var(--sf-space-md) var(--sf-space-md);
+  font-size: var(--sf-font-size-base);
+  font-family: inherit;
+  color: var(--sf-text);
+  background: linear-gradient(135deg, rgba(13, 18, 19, 0.6) 0%, rgba(24, 32, 36, 0.5) 100%);
+  border: 1px solid rgba(60, 77, 85, 0.4);
+  border-radius: var(--sf-radius);
+  transition: all var(--sf-transition);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.sf-input::placeholder {
+  color: var(--sf-text-light);
+  opacity: 0.6;
+}
+
+.sf-input:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(24, 32, 36, 0.7) 0%, rgba(36, 46, 52, 0.6) 100%);
+  border-color: rgba(142, 201, 217, 0.4);
+}
+
+.sf-input:focus {
+  outline: none;
+  background: linear-gradient(135deg, rgba(24, 32, 36, 0.8) 0%, rgba(36, 46, 52, 0.7) 100%);
+  border-color: var(--sf-focus);
+  box-shadow: 0 0 0 3px var(--sf-glow-cyan), 0 2px 8px rgba(142, 201, 217, 0.15);
+}
+
+.sf-input:disabled {
+  background: rgba(24, 32, 36, 0.3);
+  border-color: rgba(60, 77, 85, 0.2);
+  color: var(--sf-text-light);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Buttons */
+
+.sf-button {
+  padding: var(--sf-space-md) var(--sf-space-lg);
+  font-size: var(--sf-font-size-base);
+  font-weight: 700;
+  font-family: inherit;
+  color: #0d1213;
+  background: linear-gradient(135deg, var(--sf-accent-hover) 0%, var(--sf-accent) 60%, var(--sf-accent-dark) 100%);
+  border: 1px solid rgba(217, 163, 90, 0.3);
+  border-radius: var(--sf-radius);
+  cursor: pointer;
+  transition: all var(--sf-transition);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 12px rgba(217, 163, 90, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.sf-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.1) 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity var(--sf-transition);
+}
+
+.sf-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 24px rgba(217, 163, 90, 0.4),
+    0 0 32px rgba(217, 163, 90, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(240, 184, 102, 0.5);
+}
+
+.sf-button:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.sf-button:active:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(217, 163, 90, 0.3);
+}
+
+.sf-button:focus-visible {
+  outline: 2px solid var(--sf-focus);
+  outline-offset: 3px;
+}
+
+.sf-button:disabled {
+  background: linear-gradient(135deg, rgba(117, 138, 148, 0.3) 0%, rgba(60, 77, 85, 0.3) 100%);
+  border-color: rgba(60, 77, 85, 0.2);
+  color: var(--sf-text-light);
+  cursor: not-allowed;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+/* Error & Validation Messages */
+
+.sf-error {
+  padding: var(--sf-space-sm) var(--sf-space-md);
+  font-weight: 600;
+  color: var(--sf-danger);
+  background: linear-gradient(90deg, rgba(204, 119, 102, 0.15) 0%, rgba(204, 119, 102, 0.05) 100%);
+  border-left: 3px solid var(--sf-danger);
+  border-radius: 0 var(--sf-radius) var(--sf-radius) 0;
+  box-shadow: 0 2px 8px rgba(204, 119, 102, 0.1);
+}
+
+.sf-field-error {
+  font-size: var(--sf-font-size-sm);
+  line-height: var(--sf-line-height-base);
+  color: var(--sf-danger);
+  margin-top: var(--sf-space-xs);
+  text-shadow: 0 0 8px rgba(204, 119, 102, 0.3);
+}
+
+/* Hint / Supporting Text */
+
+.sf-hint {
+  margin-top: var(--sf-space-lg);
+  font-size: var(--sf-font-size-sm);
+  color: var(--sf-text-muted);
+  line-height: var(--sf-line-height-relaxed);
+}
+
+/* Accessibility */
+
+:focus-visible {
+  outline: 2px solid var(--sf-focus);
+  outline-offset: 2px;
+}
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  
+  .sf-card {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --sf-space-3xl: 32px;
+  }
+
+  .sf-page {
+    margin: var(--sf-space-2xl) auto;
+  }
+
+  .sf-title {
+    font-size: var(--sf-font-size-lg);
+  }
+}
