@@ -1,0 +1,12 @@
+<div class="mana-bar" [attr.aria-label]="'Mana: ' + current() + '/' + max()">
+  <div class="mana-crystals">
+    @for (filled of crystals(); track $index) {
+      <div
+        class="mana-crystal"
+        [class.filled]="filled"
+        [class.empty]="!filled"
+      ></div>
+    }
+  </div>
+  <span class="mana-text">{{ current() }}/{{ max() }}</span>
+</div>

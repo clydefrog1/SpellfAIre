@@ -103,7 +103,7 @@ public class GameService {
 		game.setUpdatedAt(now);
 
 		game = gameRepository.save(game);
-		return toResponse(game);
+		return toGameResponse(game);
 	}
 
 	/**
@@ -112,7 +112,7 @@ public class GameService {
 	@Transactional(readOnly = true)
 	public List<GameResponse> getPlayerGames(String playerId) {
 		return gameRepository.findByPlayer1IdOrPlayer2IdOrderByUpdatedAtDesc(playerId, playerId).stream()
-			.map(this::toResponse)
+			.map(this::toGameResponse)
 			.toList();
 	}
 
@@ -123,7 +123,7 @@ public class GameService {
 	public List<GameResponse> getActiveGames(String playerId) {
 		List<GameStatus> activeStatuses = List.of(GameStatus.SETUP, GameStatus.IN_PROGRESS);
 		return gameRepository.findByPlayerIdAndGameStatusIn(playerId, activeStatuses).stream()
-			.map(this::toResponse)
+			.map(this::toGameResponse)
 			.toList();
 	}
 
@@ -133,7 +133,7 @@ public class GameService {
 	@Transactional(readOnly = true)
 	public Optional<GameResponse> getGameById(UUID gameId) {
 		return gameRepository.findById(gameId)
-			.map(this::toResponse);
+			.map(this::toGameResponse);
 	}
 
 	/**
@@ -185,9 +185,9 @@ public class GameService {
 	}
 
 	/**
-	 * Map Game entity to GameResponse DTO.
+	 * Map Game entity to GameResponse DTO (package-visible for GameplayService).
 	 */
-	private GameResponse toResponse(Game game) {
+	public GameResponse toGameResponse(Game game) {
 		GameResponse response = new GameResponse();
 		response.setId(game.getId().toString());
 		response.setPlayer1Id(game.getPlayer1Id());

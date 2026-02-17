@@ -1,0 +1,135 @@
+.game-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100px;
+  min-height: 130px;
+  padding: var(--sf-space-xs) var(--sf-space-sm);
+  border-radius: var(--sf-radius);
+  border: 2px solid var(--sf-border);
+  background: linear-gradient(160deg, rgba(24, 32, 36, 0.95), rgba(36, 46, 52, 0.85));
+  color: var(--sf-text);
+  cursor: default;
+  transition: all 200ms ease-out;
+  position: relative;
+  user-select: none;
+  font-size: 11px;
+  gap: 2px;
+
+  &.playable {
+    cursor: pointer;
+    border-color: rgba(217, 163, 90, 0.4);
+
+    &:hover {
+      transform: translateY(-8px) scale(1.05);
+      box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.5),
+        0 0 16px rgba(217, 163, 90, 0.3);
+      border-color: var(--sf-accent);
+      z-index: 5;
+    }
+  }
+
+  &.selected {
+    border-color: var(--sf-accent);
+    box-shadow: 0 0 20px rgba(217, 163, 90, 0.5);
+    transform: translateY(-12px) scale(1.08);
+    z-index: 5;
+  }
+
+  // Faction color accents
+  &.faction-kingdom { border-top-color: #5b8dd9; }
+  &.faction-wildclan { border-top-color: #6bb85c; }
+  &.faction-necropolis { border-top-color: #a87ed4; }
+  &.faction-ironbound { border-top-color: #d4964a; }
+
+  // School color accents
+  &.spell {
+    border-style: solid;
+    border-left-width: 3px;
+  }
+  &.school-fire { border-left-color: #e05a3a; }
+  &.school-frost { border-left-color: #5aaee0; }
+  &.school-nature { border-left-color: #5ec96a; }
+  &.school-shadow { border-left-color: #8a5ec9; }
+}
+
+.card-cost {
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #5b8dd9, #3a6bc0);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.card-name {
+  font-weight: 700;
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 4px;
+  color: var(--sf-text);
+}
+
+.card-keywords {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.keyword-badge {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(217, 163, 90, 0.2);
+  color: var(--sf-accent);
+  letter-spacing: 0.5px;
+}
+
+.card-rules {
+  font-size: 8px;
+  text-align: center;
+  color: var(--sf-text-muted);
+  line-height: 1.3;
+  padding: 2px 0;
+  flex: 1;
+}
+
+.card-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.stat {
+  &.atk { color: #e05a3a; }
+  &.hp { color: #5ec96a; }
+}
+
+.stat-sep {
+  color: var(--sf-text-light);
+  font-weight: 400;
+}
+
+.card-type {
+  font-size: 7px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sf-text-light);
+}

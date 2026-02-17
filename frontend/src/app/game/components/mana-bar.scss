@@ -1,0 +1,35 @@
+.mana-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-sm);
+}
+
+.mana-crystals {
+  display: flex;
+  gap: 3px;
+}
+
+.mana-crystal {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(91, 141, 217, 0.3);
+  transition: all 300ms ease-out;
+
+  &.filled {
+    background: linear-gradient(135deg, #5b8dd9, #7daee8);
+    box-shadow: 0 0 6px rgba(91, 141, 217, 0.4);
+    border-color: rgba(125, 174, 232, 0.5);
+  }
+
+  &.empty {
+    background: rgba(24, 32, 36, 0.6);
+    border-color: rgba(60, 77, 85, 0.3);
+  }
+}
+
+.mana-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5b8dd9;
+}

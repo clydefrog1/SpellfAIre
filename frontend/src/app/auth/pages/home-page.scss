@@ -1,2 +1,20 @@
 /* Home page component styles. All shared styling is in src/styles.scss */
-/* Add page-specific overrides here if needed. */
+
+.home-actions {
+  display: flex;
+  gap: var(--sf-space-md);
+  margin-top: var(--sf-space-lg);
+}
+
+.sf-button-secondary {
+  background: linear-gradient(135deg, rgba(117, 138, 148, 0.4), rgba(60, 77, 85, 0.4));
+  border-color: rgba(117, 138, 148, 0.3);
+  color: var(--sf-text);
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(117, 138, 148, 0.6), rgba(60, 77, 85, 0.6));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: rgba(142, 201, 217, 0.3);
+  }
+}

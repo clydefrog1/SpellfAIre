@@ -1,0 +1,63 @@
+<main class="sf-page sf-page-wide game-setup">
+  <button class="sf-back-link" type="button" (click)="goBack()">← Back</button>
+
+  <h1 class="sf-title">New Game</h1>
+  <p class="sf-subtitle">Choose your faction and magic school to begin.</p>
+
+  <!-- Faction Picker -->
+  <section class="picker-section">
+    <h2 class="picker-label">Faction</h2>
+    <div class="picker-grid" @listStagger>
+      @for (f of factions; track f.id) {
+        <button
+          class="picker-card"
+          [class.selected]="selectedFaction() === f.id"
+          [style.--faction-color]="f.color"
+          type="button"
+          (click)="selectFaction(f)"
+        >
+          <span class="picker-icon">{{ f.icon }}</span>
+          <span class="picker-name">{{ f.name }}</span>
+          <span class="picker-desc">{{ f.description }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  <!-- School Picker -->
+  <section class="picker-section">
+    <h2 class="picker-label">Magic School</h2>
+    <div class="picker-grid" @listStagger>
+      @for (s of schools; track s.id) {
+        <button
+          class="picker-card"
+          [class.selected]="selectedSchool() === s.id"
+          [style.--faction-color]="s.color"
+          type="button"
+          (click)="selectSchool(s)"
+        >
+          <span class="picker-icon">{{ s.icon }}</span>
+          <span class="picker-name">{{ s.name }}</span>
+          <span class="picker-desc">{{ s.description }}</span>
+        </button>
+      }
+    </div>
+  </section>
+
+  @if (error()) {
+    <p class="sf-error">{{ error() }}</p>
+  }
+
+  <button
+    class="sf-button start-btn"
+    type="button"
+    [disabled]="!selectedFaction() || !selectedSchool() || loading()"
+    (click)="startGame()"
+  >
+    @if (loading()) {
+      Starting…
+    } @else {
+      Start Battle
+    }
+  </button>
+</main>

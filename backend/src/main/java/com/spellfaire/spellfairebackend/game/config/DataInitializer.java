@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spellfaire.spellfairebackend.game.model.Card;
+import com.spellfaire.spellfairebackend.game.model.CardType;
+import com.spellfaire.spellfairebackend.game.model.Keyword;
 import com.spellfaire.spellfairebackend.game.repo.CardRepository;
 import com.spellfaire.spellfairebackend.game.repo.DeckRepository;
 import com.spellfaire.spellfairebackend.game.repo.GameRepository;
@@ -66,6 +68,7 @@ public class DataInitializer implements CommandLineRunner {
 		}
 
 		loadCards();
+		loadTokenCards();
 
 		log.info("Data initialization complete");
 	}
@@ -112,5 +115,37 @@ public class DataInitializer implements CommandLineRunner {
 			cardRepository.saveAll(cards);
 			log.info("Loaded {} cards", cards.size());
 		}
+	}
+
+	/**
+	 * Create token cards that can be summoned by spells (not deckbuildable).
+	 */
+	private void loadTokenCards() {
+		if (cardRepository.findByName("Sproutling").isPresent()) {
+			log.info("Token cards already exist, skipping");
+			return;
+		}
+
+		Card sproutling = new Card();
+		sproutling.setName("Sproutling");
+		sproutling.setCardType(CardType.CREATURE);
+		sproutling.setCost(0);
+		sproutling.setAttack(1);
+		sproutling.setHealth(1);
+		sproutling.setKeywords(java.util.Set.of());
+		sproutling.setRulesText("Token. Cannot be added to decks.");
+		cardRepository.save(sproutling);
+
+		Card brambleWall = new Card();
+		brambleWall.setName("Bramble Wall");
+		brambleWall.setCardType(CardType.CREATURE);
+		brambleWall.setCost(0);
+		brambleWall.setAttack(0);
+		brambleWall.setHealth(6);
+		brambleWall.setKeywords(java.util.Set.of(Keyword.GUARD));
+		brambleWall.setRulesText("Token. Guard. Cannot be added to decks.");
+		cardRepository.save(brambleWall);
+
+		log.info("Loaded 2 token cards");
 	}
 }

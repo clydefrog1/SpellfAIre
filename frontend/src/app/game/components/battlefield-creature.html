@@ -1,0 +1,40 @@
+<div
+  class="bf-creature"
+  [class.player]="side() === 'player'"
+  [class.opponent]="side() === 'opponent'"
+  [class.selected]="selected()"
+  [class.selectable]="selectable()"
+  [class.highlighted]="highlighted()"
+  [class.has-guard]="hasGuard()"
+  [class.has-ward]="hasWard()"
+  [class.frozen]="isFrozen()"
+  [class.damaged]="isDamaged()"
+  [class.can-attack]="creature().canAttack && !creature().hasAttackedThisTurn"
+  [class.exhausted]="creature().hasAttackedThisTurn"
+  (click)="onClick()"
+  role="button"
+  [attr.tabindex]="selectable() ? 0 : -1"
+  [attr.title]="getTooltip()"
+  [attr.aria-label]="name() + ' ' + creature().attack + '/' + creature().health"
+>
+  <div class="bf-name">{{ name() }}</div>
+
+  <div class="bf-keywords">
+    @if (hasGuard()) { <span class="kw guard" title="Guard">🛡️</span> }
+    @if (hasLifesteal()) { <span class="kw" title="Lifesteal">🩸</span> }
+    @if (hasWard()) { <span class="kw ward" title="Ward">✨</span> }
+    @if (isFrozen()) { <span class="kw frozen" title="Frozen">❄️</span> }
+  </div>
+
+  @if (isAttackReady()) {
+    <div class="attack-ready-badge" title="Ready to attack - Click to select">
+      🗡️
+    </div>
+  }
+
+  <div class="bf-stats">
+    <span class="bf-atk">{{ creature().attack }}</span>
+    <span class="bf-sep">/</span>
+    <span class="bf-hp" [class.hurt]="isDamaged()">{{ creature().health }}</span>
+  </div>
+</div>

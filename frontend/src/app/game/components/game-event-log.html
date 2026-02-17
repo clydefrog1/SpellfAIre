@@ -1,0 +1,8 @@
+<div class="event-log">
+  @for (event of recentEvents(); track $index) {
+    <div class="event-entry" @logEntry>
+      <span class="event-icon">{{ getIcon(event.type) }}</span>
+      <span class="event-msg">{{ event.message }}</span>
+    </div>
+  }
+</div>

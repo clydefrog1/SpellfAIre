@@ -2,6 +2,7 @@ package com.spellfaire.spellfairebackend.game.service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +20,8 @@ import com.spellfaire.spellfairebackend.game.model.Card;
 import com.spellfaire.spellfairebackend.game.model.CardType;
 import com.spellfaire.spellfairebackend.game.model.Deck;
 import com.spellfaire.spellfairebackend.game.model.DeckCard;
+import com.spellfaire.spellfairebackend.game.model.Faction;
+import com.spellfaire.spellfairebackend.game.model.MagicSchool;
 import com.spellfaire.spellfairebackend.game.repo.CardRepository;
 import com.spellfaire.spellfairebackend.game.repo.DeckRepository;
 
@@ -207,6 +210,47 @@ public class DeckService {
 		response.setCreatedAt(deck.getCreatedAt());
 		response.setUpdatedAt(deck.getUpdatedAt());
 		return response;
+	}
+
+	/**
+	 * Build and persist an auto-generated deck for a user.
+	 * Picks 2x each of the 7 faction creatures (14) and
+	 * 2x each of the 5 cheapest spells from the school (10) = 24 cards.
+	 */
+	@Transactional
+	public Deck buildAutoDeck(User user, Faction faction, MagicSchool magicSchool) {
+		List<Card> creatures = cardRepository.findByCardTypeAndFaction(CardType.CREATURE, faction);
+		List<Card> spells = cardRepository.findByCardTypeAndSchool(CardType.SPELL, magicSchool)
+			.stream()
+			.sorted(Comparator.comparingInt(Card::getCost))
+			.limit(5)
+			.toList();
+
+		if (creatures.size() < 7) {
+			throw new IllegalStateException("Not enough creatures for faction " + faction);
+		}
+		if (spells.size() < 5) {
+			throw new IllegalStateException("Not enough spells for school " + magicSchool);
+		}
+
+		Deck deck = new Deck();
+		deck.setUser(user);
+		deck.setName("Auto " + faction.name() + " / " + magicSchool.name());
+		deck.setFaction(faction);
+		deck.setMagicSchool(magicSchool);
+
+		Instant now = Instant.now();
+		deck.setCreatedAt(now);
+		deck.setUpdatedAt(now);
+
+		for (Card creature : creatures) {
+			deck.getDeckCards().add(new DeckCard(deck, creature, 2));
+		}
+		for (Card spell : spells) {
+			deck.getDeckCards().add(new DeckCard(deck, spell, 2));
+		}
+
+		return deckRepository.save(deck);
 	}
 
 	private record ResolvedDeckCard(Card card, int quantity) {

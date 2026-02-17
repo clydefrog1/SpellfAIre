@@ -9,5 +9,9 @@ export const routes: Routes = [
 	{ path: '', component: HomePage, canActivate: [authGuard] },
 	{ path: 'login', component: LoginPage },
 	{ path: 'register', component: RegisterPage },
+	{
+		path: 'game',
+		loadChildren: () => import('./game/game.routes').then(m => m.gameRoutes),
+	},
 	{ path: '**', redirectTo: 'login' }
 ];

@@ -1,0 +1,43 @@
+<div
+  class="game-card"
+  [class]="cardClass()"
+  [class.playable]="playable()"
+  [class.selected]="selected()"
+  [class.spell]="isSpell()"
+  (click)="onClick()"
+  role="button"
+  [attr.tabindex]="playable() ? 0 : -1"
+  [attr.aria-label]="card().name + ' - Cost ' + card().cost"
+>
+  <!-- Mana Cost -->
+  <div class="card-cost">{{ card().cost }}</div>
+
+  <!-- Name -->
+  <div class="card-name">{{ card().name }}</div>
+
+  <!-- Keywords -->
+  @if (card().keywords?.length) {
+    <div class="card-keywords">
+      @for (kw of card().keywords; track kw) {
+        <span class="keyword-badge">{{ kw }}</span>
+      }
+    </div>
+  }
+
+  <!-- Rules Text -->
+  @if (card().rulesText) {
+    <div class="card-rules">{{ card().rulesText }}</div>
+  }
+
+  <!-- Stats (Creatures) -->
+  @if (isCreature()) {
+    <div class="card-stats">
+      <span class="stat atk">{{ card().attack }}</span>
+      <span class="stat-sep">/</span>
+      <span class="stat hp">{{ card().health }}</span>
+    </div>
+  }
+
+  <!-- Type indicator -->
+  <div class="card-type">{{ isCreature() ? 'Creature' : 'Spell' }}</div>
+</div>

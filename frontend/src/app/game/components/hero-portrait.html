@@ -1,0 +1,23 @@
+<div
+  class="hero-portrait"
+  [class.player]="side() === 'player'"
+  [class.opponent]="side() === 'opponent'"
+  [class.highlighted]="highlighted()"
+  [class.damaged]="isDamaged()"
+  [class.critical]="isCritical()"
+  (click)="onClick()"
+  role="button"
+  tabindex="0"
+  [attr.aria-label]="(side() === 'player' ? 'Your' : 'Enemy') + ' Hero: ' + health() + ' HP'"
+>
+  <div class="hero-icon">
+    @if (side() === 'player') { ⚔️ } @else { 👹 }
+  </div>
+  <div class="hero-health">
+    <span class="hp-value">{{ health() }}</span>
+    <span class="hp-label">HP</span>
+  </div>
+  <div class="hp-bar">
+    <div class="hp-fill" [style.width.%]="healthPercent()"></div>
+  </div>
+</div>

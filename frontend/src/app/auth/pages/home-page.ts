@@ -21,4 +21,8 @@ export class HomePage {
     await this.auth.logout();
     await this.router.navigateByUrl('/login');
   }
+
+  playVsAi(): void {
+    this.router.navigateByUrl('/game/setup');
+  }
 }

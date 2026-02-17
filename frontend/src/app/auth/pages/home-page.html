@@ -3,5 +3,8 @@
 
   <p *ngIf="user() as u">Logged in as <strong>{{ u.username }}</strong> ({{ u.email }})</p>
 
-  <button class="sf-button" type="button" (click)="logout()">Logout</button>
+  <div class="home-actions">
+    <button class="sf-button" type="button" (click)="playVsAi()">Play vs AI</button>
+    <button class="sf-button sf-button-secondary" type="button" (click)="logout()">Logout</button>
+  </div>
 </main>

@@ -1,0 +1,72 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 18, 19, 0.85);
+  backdrop-filter: blur(8px);
+  animation: overlayFadeIn 400ms ease-out;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sf-space-lg);
+  padding: var(--sf-space-3xl);
+  border-radius: var(--sf-radius-lg);
+  border: 1px solid rgba(60, 77, 85, 0.5);
+  background: linear-gradient(145deg, rgba(24, 32, 36, 0.95), rgba(36, 46, 52, 0.9));
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  max-width: 400px;
+  animation: cardSlideUp 500ms cubic-bezier(0.35, 0, 0.25, 1);
+}
+
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(40px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.overlay-icon {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.overlay-title {
+  font-size: var(--sf-font-size-xl);
+  font-weight: 800;
+
+  .victory & { color: var(--sf-accent); }
+  .defeat & { color: var(--sf-danger); }
+}
+
+.overlay-subtitle {
+  color: var(--sf-text-muted);
+  font-size: var(--sf-font-size-base);
+  max-width: 300px;
+}
+
+.overlay-actions {
+  display: flex;
+  gap: var(--sf-space-md);
+}
+
+.exit-btn {
+  background: linear-gradient(135deg, rgba(117, 138, 148, 0.4), rgba(60, 77, 85, 0.4));
+  border-color: rgba(117, 138, 148, 0.3);
+  color: var(--sf-text);
+  box-shadow: none;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(117, 138, 148, 0.6), rgba(60, 77, 85, 0.6));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}

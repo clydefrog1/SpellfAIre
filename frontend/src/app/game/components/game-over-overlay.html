@@ -1,0 +1,20 @@
+<div class="overlay" [class.victory]="won() === true" [class.defeat]="won() === false">
+  <div class="overlay-card">
+    <div class="overlay-icon">
+      @if (won() === true) { 🏆 } @else { 💀 }
+    </div>
+    <h2 class="overlay-title">
+      @if (won() === true) { Victory! }
+      @else if (won() === false) { Defeat }
+      @else { Game Over }
+    </h2>
+    <p class="overlay-subtitle">
+      @if (won() === true) { The enemy hero has fallen. Well played! }
+      @else { Your hero has been vanquished. Better luck next time! }
+    </p>
+    <div class="overlay-actions">
+      <button class="sf-button" type="button" (click)="onPlayAgain()">Play Again</button>
+      <button class="sf-button exit-btn" type="button" (click)="onExit()">Exit</button>
+    </div>
+  </div>
+</div>
