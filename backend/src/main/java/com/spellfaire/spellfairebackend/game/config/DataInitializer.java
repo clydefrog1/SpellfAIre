@@ -9,17 +9,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spellfaire.spellfairebackend.game.model.Card;
 import com.spellfaire.spellfairebackend.game.repo.CardRepository;
+import com.spellfaire.spellfairebackend.game.repo.DeckRepository;
+import com.spellfaire.spellfairebackend.game.repo.GameRepository;
 
 /**
  * Initializes the database with data from JSON files on startup.
- * In development mode, drops existing collections and recreates them.
+ * In development mode, clears existing tables and recreates them.
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -27,7 +29,8 @@ public class DataInitializer implements CommandLineRunner {
 	private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
 	private final CardRepository cardRepository;
-	private final MongoTemplate mongoTemplate;
+	private final DeckRepository deckRepository;
+	private final GameRepository gameRepository;
 	private final ObjectMapper objectMapper;
 
 	@Value("${spellfaire.data.init.enabled:true}")
@@ -38,15 +41,18 @@ public class DataInitializer implements CommandLineRunner {
 
 	public DataInitializer(
 		CardRepository cardRepository,
-		MongoTemplate mongoTemplate,
+		DeckRepository deckRepository,
+		GameRepository gameRepository,
 		ObjectMapper objectMapper
 	) {
 		this.cardRepository = cardRepository;
-		this.mongoTemplate = mongoTemplate;
+		this.deckRepository = deckRepository;
+		this.gameRepository = gameRepository;
 		this.objectMapper = objectMapper;
 	}
 
 	@Override
+	@Transactional
 	public void run(String... args) throws Exception {
 		if (!initEnabled) {
 			log.info("Data initialization is disabled");
@@ -56,7 +62,7 @@ public class DataInitializer implements CommandLineRunner {
 		log.info("Starting data initialization...");
 
 		if (dropExisting) {
-			dropCollections();
+			clearTables();
 		}
 
 		loadCards();
@@ -65,26 +71,20 @@ public class DataInitializer implements CommandLineRunner {
 	}
 
 	/**
-	 * Drop existing collections for a clean slate.
+	 * Clear existing tables for a clean slate.
+	 * Order matters due to foreign key constraints.
 	 */
-	private void dropCollections() {
-		log.info("Dropping existing collections...");
-		
-		if (mongoTemplate.collectionExists("cards")) {
-			mongoTemplate.dropCollection("cards");
-			log.info("Dropped collection: cards");
-		}
-		
-		// Optionally drop other collections for complete reset
-		if (mongoTemplate.collectionExists("decks")) {
-			mongoTemplate.dropCollection("decks");
-			log.info("Dropped collection: decks");
-		}
-		
-		if (mongoTemplate.collectionExists("games")) {
-			mongoTemplate.dropCollection("games");
-			log.info("Dropped collection: games");
-		}
+	private void clearTables() {
+		log.info("Clearing existing tables...");
+
+		gameRepository.deleteAll();
+		log.info("Cleared table: games");
+
+		deckRepository.deleteAll();
+		log.info("Cleared table: decks");
+
+		cardRepository.deleteAll();
+		log.info("Cleared table: cards");
 	}
 
 	/**
@@ -92,9 +92,9 @@ public class DataInitializer implements CommandLineRunner {
 	 */
 	private void loadCards() throws IOException {
 		log.info("Loading cards from JSON...");
-		
+
 		ClassPathResource resource = new ClassPathResource("data/cards.json");
-		
+
 		if (!resource.exists()) {
 			log.warn("Cards data file not found at: data/cards.json");
 			return;
@@ -105,7 +105,10 @@ public class DataInitializer implements CommandLineRunner {
 				inputStream,
 				new TypeReference<List<Card>>() {}
 			);
-			
+
+			// Ensure IDs are null so JPA generates UUIDs
+			cards.forEach(card -> card.setId(null));
+
 			cardRepository.saveAll(cards);
 			log.info("Loaded {} cards", cards.size());
 		}

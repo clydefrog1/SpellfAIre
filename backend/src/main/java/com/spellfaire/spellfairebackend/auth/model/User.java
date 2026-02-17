@@ -1,30 +1,39 @@
 package com.spellfaire.spellfairebackend.auth.model;
 
 import java.time.Instant;
+import java.util.UUID;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-@Document("users")
+@Entity
+@Table(name = "users")
 public class User {
 	@Id
-	private String id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(columnDefinition = "BINARY(16)")
+	private UUID id;
 
-	@Indexed(unique = true)
+	@Column(unique = true, nullable = false)
 	private String email;
 
+	@Column(nullable = false)
 	private String username;
 
+	@Column(nullable = false)
 	private String passwordHash;
 
 	private Instant createdAt;
 
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 

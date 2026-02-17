@@ -1,32 +1,62 @@
 package com.spellfaire.spellfairebackend.game.model;
 
 import java.time.Instant;
+import java.util.UUID;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 /**
  * Represents a game instance between two players (or player vs AI).
  * Contains the complete game state including both players' states.
  */
-@Document("games")
+@Entity
+@Table(name = "games")
 public class Game {
 	@Id
-	private String id;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(columnDefinition = "BINARY(16)")
+	private UUID id;
 
+	@Column(nullable = false, length = 36)
 	private String player1Id;
+
+	@Column(nullable = false, length = 36)
 	private String player2Id;  // Can be "AI" for AI games
 
+	@Column(length = 36)
 	private String currentPlayerId;  // Which player's turn it is
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
 	private GameStatus gameStatus;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 20)
 	private GamePhase currentPhase;
 
+	@Column(length = 36)
 	private String winnerId;  // null if game is not finished
 
+	@Column(nullable = false)
 	private int turnNumber;  // Current turn number (starts at 1)
 
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@JoinColumn(name = "player1_state_id", unique = true)
 	private GamePlayerState player1State;
+
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@JoinColumn(name = "player2_state_id", unique = true)
 	private GamePlayerState player2State;
 
 	private Instant createdAt;
@@ -41,11 +71,11 @@ public class Game {
 	}
 
 	// Getters and setters
-	public String getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(UUID id) {
 		this.id = id;
 	}
 

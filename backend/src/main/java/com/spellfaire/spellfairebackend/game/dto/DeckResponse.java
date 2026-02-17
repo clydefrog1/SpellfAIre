@@ -3,7 +3,6 @@ package com.spellfaire.spellfairebackend.game.dto;
 import java.time.Instant;
 import java.util.List;
 
-import com.spellfaire.spellfairebackend.game.model.DeckCard;
 import com.spellfaire.spellfairebackend.game.model.Faction;
 import com.spellfaire.spellfairebackend.game.model.MagicSchool;
 
@@ -16,7 +15,7 @@ public class DeckResponse {
 	private String name;
 	private Faction faction;
 	private MagicSchool magicSchool;
-	private List<DeckCard> cards;
+	private List<DeckCardResponse> cards;
 	private Instant createdAt;
 	private Instant updatedAt;
 
@@ -61,11 +60,11 @@ public class DeckResponse {
 		this.magicSchool = magicSchool;
 	}
 
-	public List<DeckCard> getCards() {
+	public List<DeckCardResponse> getCards() {
 		return cards;
 	}
 
-	public void setCards(List<DeckCard> cards) {
+	public void setCards(List<DeckCardResponse> cards) {
 		this.cards = cards;
 	}
 

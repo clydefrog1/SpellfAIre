@@ -3,7 +3,6 @@ package com.spellfaire.spellfairebackend.game.dto;
 import java.time.Instant;
 
 import com.spellfaire.spellfairebackend.game.model.GamePhase;
-import com.spellfaire.spellfairebackend.game.model.GamePlayerState;
 import com.spellfaire.spellfairebackend.game.model.GameStatus;
 
 /**
@@ -18,8 +17,8 @@ public class GameResponse {
 	private GamePhase currentPhase;
 	private String winnerId;
 	private int turnNumber;
-	private GamePlayerState player1State;
-	private GamePlayerState player2State;
+	private GamePlayerStateResponse player1State;
+	private GamePlayerStateResponse player2State;
 	private Instant createdAt;
 	private Instant updatedAt;
 
@@ -88,19 +87,19 @@ public class GameResponse {
 		this.turnNumber = turnNumber;
 	}
 
-	public GamePlayerState getPlayer1State() {
+	public GamePlayerStateResponse getPlayer1State() {
 		return player1State;
 	}
 
-	public void setPlayer1State(GamePlayerState player1State) {
+	public void setPlayer1State(GamePlayerStateResponse player1State) {
 		this.player1State = player1State;
 	}
 
-	public GamePlayerState getPlayer2State() {
+	public GamePlayerStateResponse getPlayer2State() {
 		return player2State;
 	}
 
-	public void setPlayer2State(GamePlayerState player2State) {
+	public void setPlayer2State(GamePlayerStateResponse player2State) {
 		this.player2State = player2State;
 	}
 

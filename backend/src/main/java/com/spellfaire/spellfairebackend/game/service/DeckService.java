@@ -4,11 +4,16 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.spellfaire.spellfairebackend.auth.model.User;
+import com.spellfaire.spellfairebackend.auth.repo.UserRepository;
 import com.spellfaire.spellfairebackend.game.dto.CreateDeckRequest;
 import com.spellfaire.spellfairebackend.game.dto.DeckCardRequest;
+import com.spellfaire.spellfairebackend.game.dto.DeckCardResponse;
 import com.spellfaire.spellfairebackend.game.dto.DeckResponse;
 import com.spellfaire.spellfairebackend.game.model.Card;
 import com.spellfaire.spellfairebackend.game.model.CardType;
@@ -26,35 +31,42 @@ public class DeckService {
 
 	private final DeckRepository deckRepository;
 	private final CardRepository cardRepository;
+	private final UserRepository userRepository;
 
-	public DeckService(DeckRepository deckRepository, CardRepository cardRepository) {
+	public DeckService(DeckRepository deckRepository, CardRepository cardRepository, UserRepository userRepository) {
 		this.deckRepository = deckRepository;
 		this.cardRepository = cardRepository;
+		this.userRepository = userRepository;
 	}
 
 	/**
 	 * Create a new deck for a user.
 	 * Validates deck composition according to game rules.
 	 */
-	public DeckResponse createDeck(String userId, CreateDeckRequest request) {
+	@Transactional
+	public DeckResponse createDeck(UUID userId, CreateDeckRequest request) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new IllegalArgumentException("User not found"));
+
 		// Validate deck composition
-		validateDeckComposition(request);
+		List<ResolvedDeckCard> resolvedCards = resolveDeckCards(request);
+		validateDeckComposition(request, resolvedCards);
 
 		Deck deck = new Deck();
-		deck.setUserId(userId);
+		deck.setUser(user);
 		deck.setName(request.getName());
 		deck.setFaction(request.getFaction());
 		deck.setMagicSchool(request.getMagicSchool());
-		
-		List<DeckCard> deckCards = new ArrayList<>();
-		for (DeckCardRequest cardRequest : request.getCards()) {
-			deckCards.add(new DeckCard(cardRequest.getCardId(), cardRequest.getQuantity()));
-		}
-		deck.setCards(deckCards);
-		
+
 		Instant now = Instant.now();
 		deck.setCreatedAt(now);
 		deck.setUpdatedAt(now);
+
+		// Create DeckCard entities
+		for (ResolvedDeckCard rc : resolvedCards) {
+			DeckCard deckCard = new DeckCard(deck, rc.card(), rc.quantity());
+			deck.getDeckCards().add(deckCard);
+		}
 
 		deck = deckRepository.save(deck);
 		return toResponse(deck);
@@ -63,7 +75,8 @@ public class DeckService {
 	/**
 	 * Get all decks for a user.
 	 */
-	public List<DeckResponse> getUserDecks(String userId) {
+	@Transactional(readOnly = true)
+	public List<DeckResponse> getUserDecks(UUID userId) {
 		return deckRepository.findByUserIdOrderByUpdatedAtDesc(userId).stream()
 			.map(this::toResponse)
 			.toList();
@@ -72,7 +85,8 @@ public class DeckService {
 	/**
 	 * Get a specific deck by ID.
 	 */
-	public Optional<DeckResponse> getDeckById(String deckId) {
+	@Transactional(readOnly = true)
+	public Optional<DeckResponse> getDeckById(UUID deckId) {
 		return deckRepository.findById(deckId)
 			.map(this::toResponse);
 	}
@@ -80,23 +94,26 @@ public class DeckService {
 	/**
 	 * Update an existing deck.
 	 */
-	public Optional<DeckResponse> updateDeck(String deckId, String userId, CreateDeckRequest request) {
+	@Transactional
+	public Optional<DeckResponse> updateDeck(UUID deckId, UUID userId, CreateDeckRequest request) {
 		return deckRepository.findById(deckId)
-			.filter(deck -> deck.getUserId().equals(userId))  // Ensure user owns the deck
+			.filter(deck -> deck.getUser().getId().equals(userId))  // Ensure user owns the deck
 			.map(deck -> {
-				validateDeckComposition(request);
-				
+				List<ResolvedDeckCard> resolvedCards = resolveDeckCards(request);
+				validateDeckComposition(request, resolvedCards);
+
 				deck.setName(request.getName());
 				deck.setFaction(request.getFaction());
 				deck.setMagicSchool(request.getMagicSchool());
-				
-				List<DeckCard> deckCards = new ArrayList<>();
-				for (DeckCardRequest cardRequest : request.getCards()) {
-					deckCards.add(new DeckCard(cardRequest.getCardId(), cardRequest.getQuantity()));
+
+				// Replace deck cards
+				deck.getDeckCards().clear();
+				for (ResolvedDeckCard rc : resolvedCards) {
+					DeckCard deckCard = new DeckCard(deck, rc.card(), rc.quantity());
+					deck.getDeckCards().add(deckCard);
 				}
-				deck.setCards(deckCards);
 				deck.setUpdatedAt(Instant.now());
-				
+
 				return toResponse(deckRepository.save(deck));
 			});
 	}
@@ -104,14 +121,28 @@ public class DeckService {
 	/**
 	 * Delete a deck.
 	 */
-	public boolean deleteDeck(String deckId, String userId) {
+	@Transactional
+	public boolean deleteDeck(UUID deckId, UUID userId) {
 		return deckRepository.findById(deckId)
-			.filter(deck -> deck.getUserId().equals(userId))
+			.filter(deck -> deck.getUser().getId().equals(userId))
 			.map(deck -> {
 				deckRepository.delete(deck);
 				return true;
 			})
 			.orElse(false);
+	}
+
+	/**
+	 * Resolve card IDs from the request to Card entities.
+	 */
+	private List<ResolvedDeckCard> resolveDeckCards(CreateDeckRequest request) {
+		List<ResolvedDeckCard> resolved = new ArrayList<>();
+		for (DeckCardRequest cardRequest : request.getCards()) {
+			Card card = cardRepository.findById(UUID.fromString(cardRequest.getCardId()))
+				.orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardRequest.getCardId()));
+			resolved.add(new ResolvedDeckCard(card, cardRequest.getQuantity()));
+		}
+		return resolved;
 	}
 
 	/**
@@ -121,16 +152,14 @@ public class DeckService {
 	 * - Exactly 10 spells from the chosen magic school
 	 * - Max 2 copies of any card
 	 */
-	private void validateDeckComposition(CreateDeckRequest request) {
+	private void validateDeckComposition(CreateDeckRequest request, List<ResolvedDeckCard> resolvedCards) {
 		int totalCards = 0;
 		int creatureCount = 0;
 		int spellCount = 0;
 
-		for (DeckCardRequest cardRequest : request.getCards()) {
-			Card card = cardRepository.findById(cardRequest.getCardId())
-				.orElseThrow(() -> new IllegalArgumentException("Card not found: " + cardRequest.getCardId()));
-
-			totalCards += cardRequest.getQuantity();
+		for (ResolvedDeckCard rc : resolvedCards) {
+			Card card = rc.card();
+			totalCards += rc.quantity();
 
 			// Validate card belongs to chosen faction/school
 			if (card.getCardType() == CardType.CREATURE) {
@@ -139,14 +168,14 @@ public class DeckService {
 						"Creature " + card.getName() + " does not belong to faction " + request.getFaction()
 					);
 				}
-				creatureCount += cardRequest.getQuantity();
+				creatureCount += rc.quantity();
 			} else if (card.getCardType() == CardType.SPELL) {
 				if (card.getSchool() != request.getMagicSchool()) {
 					throw new IllegalArgumentException(
 						"Spell " + card.getName() + " does not belong to school " + request.getMagicSchool()
 					);
 				}
-				spellCount += cardRequest.getQuantity();
+				spellCount += rc.quantity();
 			}
 		}
 
@@ -167,14 +196,19 @@ public class DeckService {
 	 */
 	private DeckResponse toResponse(Deck deck) {
 		DeckResponse response = new DeckResponse();
-		response.setId(deck.getId());
-		response.setUserId(deck.getUserId());
+		response.setId(deck.getId().toString());
+		response.setUserId(deck.getUser().getId().toString());
 		response.setName(deck.getName());
 		response.setFaction(deck.getFaction());
 		response.setMagicSchool(deck.getMagicSchool());
-		response.setCards(deck.getCards());
+		response.setCards(deck.getDeckCards().stream()
+			.map(dc -> new DeckCardResponse(dc.getCard().getId().toString(), dc.getQuantity()))
+			.toList());
 		response.setCreatedAt(deck.getCreatedAt());
 		response.setUpdatedAt(deck.getUpdatedAt());
 		return response;
+	}
+
+	private record ResolvedDeckCard(Card card, int quantity) {
 	}
 }

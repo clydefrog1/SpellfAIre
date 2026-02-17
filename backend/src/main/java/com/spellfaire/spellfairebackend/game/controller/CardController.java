@@ -1,6 +1,7 @@
 package com.spellfaire.spellfairebackend.game.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,7 +52,7 @@ public class CardController {
 	 */
 	@GetMapping("/{id}")
 	public ResponseEntity<CardResponse> getCardById(@PathVariable String id) {
-		return cardService.getCardById(id)
+		return cardService.getCardById(UUID.fromString(id))
 			.map(ResponseEntity::ok)
 			.orElse(ResponseEntity.notFound().build());
 	}

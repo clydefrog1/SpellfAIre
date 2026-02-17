@@ -66,8 +66,7 @@ public class AuthService {
 		}
 
 		RefreshTokenService.IssuedRefreshToken rotated = refreshTokenService.rotate(rawRefreshToken);
-		User user = userRepository.findById(rotated.persisted().getUserId())
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unknown user"));
+		User user = rotated.persisted().getUser();
 
 		String accessToken = jwtService.createAccessToken(user);
 		return new AuthResult(new AuthResponse(accessToken, toUserResponse(user)), rotated.rawToken());
@@ -79,12 +78,12 @@ public class AuthService {
 
 	private AuthResult issueTokens(User user) {
 		String accessToken = jwtService.createAccessToken(user);
-		RefreshTokenService.IssuedRefreshToken refresh = refreshTokenService.issueForUser(user.getId());
+		RefreshTokenService.IssuedRefreshToken refresh = refreshTokenService.issueForUser(user);
 		return new AuthResult(new AuthResponse(accessToken, toUserResponse(user)), refresh.rawToken());
 	}
 
 	private static UserResponse toUserResponse(User user) {
-		return new UserResponse(user.getId(), user.getEmail(), user.getUsername());
+		return new UserResponse(user.getId().toString(), user.getEmail(), user.getUsername());
 	}
 
 	public record AuthResult(AuthResponse response, String refreshTokenValue) {

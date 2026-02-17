@@ -2,6 +2,7 @@ package com.spellfaire.spellfairebackend.game.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -18,7 +19,7 @@ import com.spellfaire.spellfairebackend.game.repo.CardRepository;
  */
 @Service
 public class CardService {
-	
+
 	private final CardRepository cardRepository;
 
 	public CardService(CardRepository cardRepository) {
@@ -37,7 +38,7 @@ public class CardService {
 	/**
 	 * Get a card by ID.
 	 */
-	public Optional<CardResponse> getCardById(String id) {
+	public Optional<CardResponse> getCardById(UUID id) {
 		return cardRepository.findById(id)
 			.map(this::toResponse);
 	}
@@ -83,7 +84,7 @@ public class CardService {
 	 */
 	private CardResponse toResponse(Card card) {
 		CardResponse response = new CardResponse();
-		response.setId(card.getId());
+		response.setId(card.getId().toString());
 		response.setName(card.getName());
 		response.setCardType(card.getCardType());
 		response.setCost(card.getCost());

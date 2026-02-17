@@ -1,14 +1,20 @@
 services:
-  mongo:
-    image: mongo:7
-    container_name: spellfaire-mongo
+  mysql:
+    image: mysql:8
+    container_name: spellfaire-mysql
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "3306:3306"
     environment:
-      MONGO_INITDB_DATABASE: spellfaire
+      MYSQL_ROOT_PASSWORD: spellfaire
+      MYSQL_DATABASE: spellfaire
     volumes:
-      - mongo_data:/data/db
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  mongo_data:
+  mysql_data:

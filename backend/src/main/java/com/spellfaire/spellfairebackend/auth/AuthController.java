@@ -22,6 +22,8 @@ import com.spellfaire.spellfairebackend.auth.model.User;
 import com.spellfaire.spellfairebackend.auth.repo.UserRepository;
 import com.spellfaire.spellfairebackend.auth.service.AuthService;
 
+import java.util.UUID;
+
 import jakarta.validation.Valid;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -85,9 +87,9 @@ public class AuthController {
 	@GetMapping("/me")
 	public UserResponse me(Authentication authentication) {
 		String userId = (String) authentication.getPrincipal();
-		User user = userRepository.findById(userId)
+		User user = userRepository.findById(UUID.fromString(userId))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-		return new UserResponse(user.getId(), user.getEmail(), user.getUsername());
+		return new UserResponse(user.getId().toString(), user.getEmail(), user.getUsername());
 	}
 
 	private static String getCookieValue(HttpServletRequest request, String name) {

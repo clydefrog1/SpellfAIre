@@ -1,17 +1,16 @@
 package com.spellfaire.spellfairebackend.game.repo;
 
 import java.util.List;
+import java.util.UUID;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.spellfaire.spellfairebackend.game.model.Deck;
 
 /**
  * Repository for Deck entities.
  */
-public interface DeckRepository extends MongoRepository<Deck, String> {
-	
-	List<Deck> findByUserId(String userId);
-	
-	List<Deck> findByUserIdOrderByUpdatedAtDesc(String userId);
+public interface DeckRepository extends JpaRepository<Deck, UUID> {
+
+	List<Deck> findByUserIdOrderByUpdatedAtDesc(UUID userId);
 }

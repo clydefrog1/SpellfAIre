@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.spellfaire.spellfairebackend.auth.model.RefreshToken;
+import com.spellfaire.spellfairebackend.auth.model.User;
 import com.spellfaire.spellfairebackend.auth.repo.RefreshTokenRepository;
 
 @Service
@@ -28,12 +29,12 @@ public class RefreshTokenService {
 		this.refreshTtlSeconds = refreshTtlSeconds;
 	}
 
-	public IssuedRefreshToken issueForUser(String userId) {
+	public IssuedRefreshToken issueForUser(User user) {
 		String rawToken = generateTokenValue();
 		String tokenHash = sha256Base64Url(rawToken);
 
 		RefreshToken refreshToken = new RefreshToken();
-		refreshToken.setUserId(userId);
+		refreshToken.setUser(user);
 		refreshToken.setTokenHash(tokenHash);
 		refreshToken.setCreatedAt(Instant.now());
 		refreshToken.setExpiresAt(Instant.now().plusSeconds(refreshTtlSeconds));
@@ -55,7 +56,7 @@ public class RefreshTokenService {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Refresh token expired");
 		}
 
-		IssuedRefreshToken issued = issueForUser(existing.getUserId());
+		IssuedRefreshToken issued = issueForUser(existing.getUser());
 		existing.setRevokedAt(Instant.now());
 		existing.setReplacedByTokenHash(issued.persisted().getTokenHash());
 		refreshTokenRepository.save(existing);
