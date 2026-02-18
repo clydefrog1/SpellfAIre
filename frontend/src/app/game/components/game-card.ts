@@ -1,9 +1,11 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, input, output, computed } from '@angular/core';
 import { CardResponse } from '../models/game.models';
 
 @Component({
   selector: 'app-game-card',
   standalone: true,
+  imports: [NgTemplateOutlet],
   templateUrl: './game-card.html',
   styleUrl: './game-card.scss',
 })
@@ -13,6 +15,17 @@ export class GameCard {
   readonly selected = input(false);
   /** True when the card costs more mana than the player currently has. */
   readonly insufficientMana = input(false);
+  /** Compact layout variant (used for battlefield mini-cards). */
+  readonly compact = input(false);
+  /** Hide the mana cost bubble (used for battlefield mini-cards). */
+  readonly hideCost = input(false);
+  /** Disable interactivity/ARIA for nested usages (battlefield wrapper handles input). */
+  readonly interactive = input(true);
+
+  /** Optional overrides (e.g., current battlefield stats/keywords). */
+  readonly attackOverride = input<number | null | undefined>(undefined);
+  readonly healthOverride = input<number | null | undefined>(undefined);
+  readonly keywordsOverride = input<readonly string[] | null | undefined>(undefined);
   readonly cardClick = output<CardResponse>();
 
   readonly isCreature = computed(() => this.card().cardType === 'CREATURE');
@@ -22,7 +35,21 @@ export class GameCard {
     this.card().cardType === 'CREATURE' ? 'Summon to Battlefield' : 'Cast this spell'
   );
 
-  readonly keywords = computed(() => {
+  readonly displayAttack = computed(() => {
+    const override = this.attackOverride();
+    if (override !== undefined) return override;
+    return this.card().attack;
+  });
+
+  readonly displayHealth = computed(() => {
+    const override = this.healthOverride();
+    if (override !== undefined) return override;
+    return this.card().health;
+  });
+
+  readonly displayKeywords = computed(() => {
+    const override = this.keywordsOverride();
+    if (Array.isArray(override)) return override;
     const maybeKeywords = (this.card() as unknown as { keywords?: string[] | null }).keywords;
     return Array.isArray(maybeKeywords) ? maybeKeywords : [];
   });
@@ -60,6 +87,7 @@ export class GameCard {
   }
 
   onClick(): void {
+    if (!this.interactive()) return;
     if (this.playable()) {
       this.cardClick.emit(this.card());
     }

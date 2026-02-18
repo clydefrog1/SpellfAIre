@@ -1,9 +1,11 @@
 import { Component, input, output, computed } from '@angular/core';
+import { GameCard } from './game-card';
 import { BoardCreatureResponse, CardResponse, Keyword } from '../models/game.models';
 
 @Component({
   selector: 'app-battlefield-creature',
   standalone: true,
+  imports: [GameCard],
   templateUrl: './battlefield-creature.html',
   styleUrl: './battlefield-creature.scss',
 })

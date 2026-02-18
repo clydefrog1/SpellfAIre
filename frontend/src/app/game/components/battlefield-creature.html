@@ -20,29 +20,25 @@
   @if (isAttackReady()) {
     <div class="attack-action-tip" role="tooltip">Click to attack</div>
   }
-  <div class="bf-name">{{ name() }}</div>
 
-  <div class="bf-keywords">
-    @if (hasGuard()) { <span class="kw guard" title="Guard">🛡️</span> }
-    @if (hasLifesteal()) { <span class="kw" title="Lifesteal">🩸</span> }
-    @if (hasWard()) { <span class="kw ward" title="Ward">✨</span> }
-    @if (isFrozen()) { <span class="kw frozen" title="Frozen">❄️</span> }
-  </div>
+  @if (card()) {
+    <app-game-card
+      class="bf-card-face"
+      [card]="card()!"
+      [compact]="true"
+      [hideCost]="true"
+      [interactive]="false"
+      [attackOverride]="creature().attack"
+      [healthOverride]="creature().health"
+      [keywordsOverride]="creature().keywords"
+    />
+  } @else {
+    <div class="bf-card-fallback">{{ name() }}</div>
+  }
 
   @if (isAttackReady()) {
     <div class="attack-ready-badge" title="Ready to attack - Click to select">
       🗡️
     </div>
   }
-
-  <div class="bf-stats">
-    <div class="bf-stat-badge atk">
-      <span class="stat-icon">⚔️</span>
-      <span class="stat-value">{{ creature().attack }}</span>
-    </div>
-    <div class="bf-stat-badge hp" [class.hurt]="isDamaged()">
-      <span class="stat-icon">❤️</span>
-      <span class="stat-value">{{ creature().health }}</span>
-    </div>
-  </div>
 </div>

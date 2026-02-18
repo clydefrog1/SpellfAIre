@@ -5,13 +5,17 @@
   [class.selected]="selected()"
   [class.insufficient-mana]="insufficientMana()"
   [class.spell]="isSpell()"
+  [class.compact]="compact()"
+  [class.hide-cost]="hideCost()"
   (click)="onClick()"
-  role="button"
-  [attr.tabindex]="playable() ? 0 : -1"
-  [attr.aria-label]="card().name + ' - Cost ' + card().cost"
+  [attr.role]="interactive() ? 'button' : 'presentation'"
+  [attr.tabindex]="interactive() && playable() ? 0 : -1"
+  [attr.aria-label]="interactive() ? (card().name + (hideCost() ? '' : (' - Cost ' + card().cost))) : null"
 >
   <!-- Mana Cost -->
-  <div class="card-cost">{{ card().cost }}</div>
+  @if (!hideCost()) {
+    <div class="card-cost">{{ card().cost }}</div>
+  }
 
   <!-- Insufficient mana tooltip -->
   @if (insufficientMana()) {
@@ -30,36 +34,8 @@
     <div class="card-name">{{ card().name }}</div>
   </div>
 
-  <!-- Main (Art + Stats) -->
-  <div class="card-main">
-    <div class="card-art" aria-hidden="true">
-      <div class="card-art-inner">
-        <div class="card-monogram">{{ monogram() }}</div>
-      </div>
-    </div>
-
-    <div class="card-stats" aria-label="Stats">
-      @if (card().attack !== null) {
-        <div class="stat-row">
-          <span class="stat-value">{{ card().attack }}</span>
-          <span class="stat-icon" aria-hidden="true">⚔️</span>
-          <span class="stat-label">ATK</span>
-        </div>
-      }
-
-      @if (card().health !== null) {
-        <div class="stat-row">
-          <span class="stat-value">{{ card().health }}</span>
-          <span class="stat-icon" aria-hidden="true">❤️</span>
-          <span class="stat-label">HP</span>
-        </div>
-      }
-    </div>
-  </div>
-
-  <!-- Keyword slots (icons only) -->
-  <div class="card-slots" aria-label="Keywords">
-    @for (kw of keywords(); track kw) {
+  <ng-template #keywordSlots>
+    @for (kw of displayKeywords(); track kw) {
       <span
         class="card-slot"
         [attr.title]="keywordTitle(kw)"
@@ -97,14 +73,78 @@
         }
       </span>
     }
+  </ng-template>
+
+  <!-- Main (Art + Stats) -->
+  <div class="card-main">
+    <div class="card-art" aria-hidden="true">
+      <div class="card-art-inner">
+        <div class="card-monogram">{{ monogram() }}</div>
+      </div>
+    </div>
+
+    @if (compact()) {
+      <div class="card-main-right">
+        <div class="card-stats" aria-label="Stats">
+          @if (displayAttack() !== null) {
+            <div class="stat-row">
+              <span class="stat-value">{{ displayAttack() }}</span>
+              <span class="stat-icon" aria-hidden="true">⚔️</span>
+              <span class="stat-label">ATK</span>
+            </div>
+          }
+
+          @if (displayHealth() !== null) {
+            <div class="stat-row">
+              <span class="stat-value">{{ displayHealth() }}</span>
+              <span class="stat-icon" aria-hidden="true">❤️</span>
+              <span class="stat-label">HP</span>
+            </div>
+          }
+        </div>
+
+        <div class="card-slots" aria-label="Keywords">
+          <ng-container *ngTemplateOutlet="keywordSlots" />
+        </div>
+      </div>
+    } @else {
+      <div class="card-stats" aria-label="Stats">
+        @if (displayAttack() !== null) {
+          <div class="stat-row">
+            <span class="stat-value">{{ displayAttack() }}</span>
+            <span class="stat-icon" aria-hidden="true">⚔️</span>
+            <span class="stat-label">ATK</span>
+          </div>
+        }
+
+        @if (displayHealth() !== null) {
+          <div class="stat-row">
+            <span class="stat-value">{{ displayHealth() }}</span>
+            <span class="stat-icon" aria-hidden="true">❤️</span>
+            <span class="stat-label">HP</span>
+          </div>
+        }
+      </div>
+    }
   </div>
+
+  @if (!compact()) {
+    <!-- Keyword slots (icons only) -->
+    <div class="card-slots" aria-label="Keywords">
+      <ng-container *ngTemplateOutlet="keywordSlots" />
+    </div>
+  }
 
   <!-- Rules Text (always present for consistent layout) -->
   <div class="card-rules" [class.empty]="!card().rulesText">{{ card().rulesText ?? '' }}</div>
 
   <!-- Flavor text (always present for consistent layout) -->
-  <div class="card-fluff" [class.empty]="!card().flavorText">{{ card().flavorText ?? '' }}</div>
+  @if (!compact()) {
+    <div class="card-fluff" [class.empty]="!card().flavorText">{{ card().flavorText ?? '' }}</div>
+  }
 
   <!-- Type indicator -->
-  <div class="card-type">{{ isCreature() ? 'CREATURE' : 'SPELL' }}</div>
+  @if (!compact()) {
+    <div class="card-type">{{ isCreature() ? 'CREATURE' : 'SPELL' }}</div>
+  }
 </div>

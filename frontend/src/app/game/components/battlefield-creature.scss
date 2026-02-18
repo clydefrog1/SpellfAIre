@@ -1,28 +1,39 @@
 .bf-creature {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 90px;
-  height: 80px;
-  padding: var(--sf-space-xs);
-  border-radius: var(--sf-radius);
-  border: 2px solid var(--sf-border);
-  background: linear-gradient(155deg, rgba(24, 32, 36, 0.9), rgba(36, 46, 52, 0.85));
-  color: var(--sf-text);
+  position: relative;
+  display: grid;
+  place-items: center;
+  user-select: none;
   cursor: default;
   transition: all 200ms ease-out;
-  position: relative;
-  user-select: none;
-  gap: 2px;
-  overflow: visible;
+  border-radius: 10px;
+  overflow: hidden;
+
+  .bf-card-face {
+    display: block;
+  }
+
+  .bf-card-fallback {
+    width: 120px;
+    height: 112px;
+    padding: 6px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid var(--sf-border);
+    background: linear-gradient(160deg, rgba(24, 32, 36, 0.96), rgba(36, 46, 52, 0.88));
+    color: var(--sf-text);
+    display: grid;
+    place-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+  }
 
   // Attack action tooltip
   .attack-action-tip {
     position: absolute;
-    bottom: calc(100% + 8px);
+    top: 4px;
     left: 50%;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateX(-50%) translateY(-2px);
     white-space: nowrap;
     background: rgba(12, 8, 24, 0.94);
     color: #72b894;
@@ -42,7 +53,7 @@
     &::after {
       content: '';
       position: absolute;
-      top: 100%;
+      top: calc(100% - 1px);
       left: 50%;
       transform: translateX(-50%);
       border: 5px solid transparent;
@@ -58,41 +69,34 @@
   &.selectable {
     cursor: pointer;
     &:hover {
-      border-color: var(--sf-accent);
-      box-shadow: 0 0 12px rgba(217, 163, 90, 0.3);
-      transform: scale(1.05);
+      transform: scale(1.03);
     }
   }
 
   &.selected {
-    border: 3px solid var(--sf-accent);
     box-shadow:
       0 0 24px rgba(217, 163, 90, 0.7),
       inset 0 0 16px rgba(217, 163, 90, 0.2);
-    transform: scale(1.15);
+    transform: scale(1.06);
     z-index: 10;
   }
 
   &.highlighted {
-    border-color: rgba(217, 163, 90, 0.6);
     animation: targetGlow 1s ease-in-out infinite;
     cursor: crosshair;
     
     &:hover {
-      border-color: var(--sf-accent);
       box-shadow: 0 0 20px rgba(217, 163, 90, 0.5);
     }
   }
 
   &.can-attack.player {
-    border: 2px solid rgba(114, 184, 148, 0.6);
     box-shadow: 0 0 12px rgba(114, 184, 148, 0.3);
     cursor: pointer;
     
     &:hover {
-      border-color: rgba(114, 184, 148, 0.9);
       box-shadow: 0 0 20px rgba(114, 184, 148, 0.5);
-      transform: scale(1.05);
+      transform: scale(1.03);
     }
   }
 
@@ -101,7 +105,6 @@
   }
 
   &.has-guard {
-    border-color: rgba(91, 141, 217, 0.5);
     box-shadow: inset 0 0 8px rgba(91, 141, 217, 0.1);
   }
 
@@ -109,113 +112,32 @@
     &::after {
       content: '';
       position: absolute;
-      inset: -3px;
-      border-radius: var(--sf-radius);
+      inset: 2px;
+      border-radius: 9px;
       border: 2px dashed rgba(217, 163, 90, 0.4);
       pointer-events: none;
     }
   }
 
   &.frozen {
-    background: linear-gradient(155deg,
-      rgba(90, 174, 224, 0.2),
-      rgba(24, 32, 36, 0.85)
-    );
-    border-color: rgba(90, 174, 224, 0.4);
+    filter: saturate(0.95);
   }
 
   &.damaged {
-    .bf-hp {
-      background: linear-gradient(135deg, #e05a3a, #cc4433);
-    }
+    filter: saturate(0.95);
   }
-}
-
-.bf-name {
-  font-size: 9px;
-  font-weight: 700;
-  text-align: center;
-  line-height: 1.1;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.bf-keywords {
-  display: flex;
-  gap: 2px;
-  font-size: 12px;
-  line-height: 1;
-}
-
-.bf-stats {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.bf-stat-badge {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 4px 7px;
-  border-radius: 8px;
-  font-weight: 800;
-  font-size: 16px;
-  border: 2px solid;
-  min-width: 42px;
-  justify-content: center;
-  transition: all 300ms ease;
-  
-  &.atk {
-    background: linear-gradient(135deg, rgba(224, 90, 58, 0.3), rgba(180, 60, 40, 0.4));
-    border-color: rgba(224, 90, 58, 0.6);
-    color: #ff6a4a;
-  }
-  
-  &.hp {
-    background: linear-gradient(135deg, rgba(94, 201, 106, 0.3), rgba(60, 150, 70, 0.4));
-    border-color: rgba(94, 201, 106, 0.6);
-    color: #6ef07e;
-    
-    &.hurt {
-      background: linear-gradient(135deg, rgba(224, 90, 58, 0.4), rgba(180, 60, 40, 0.5));
-      border-color: rgba(224, 90, 58, 0.7);
-      color: #ff4444;
-      animation: hurtPulse 600ms ease-out;
-    }
-  }
-  
-  .stat-icon {
-    font-size: 13px;
-    line-height: 1;
-    opacity: 0.9;
-  }
-  
-  .stat-value {
-    font-size: 17px;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-    letter-spacing: 0.5px;
-  }
-}
-
-@keyframes hurtPulse {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.15); }
-  100% { transform: scale(1); }
 }
 
 .attack-ready-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: 4px;
+  right: 4px;
   font-size: 18px;
   animation: attackPulse 1.5s ease-in-out infinite;
   filter: drop-shadow(0 0 4px rgba(114, 184, 148, 0.6));
   z-index: 1;
   line-height: 1;
+  pointer-events: none;
 }
 
 @keyframes attackPulse {

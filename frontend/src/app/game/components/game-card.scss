@@ -110,6 +110,105 @@
   }
 }
 
+// Compact variant (battlefield mini-card)
+.game-card.compact {
+  width: 120px;
+  height: 96px;
+  max-height: 96px;
+  padding: 4px;
+  padding-bottom: 6px;
+  gap: 4px;
+  margin-top: 0;
+  overflow: hidden;
+
+  .card-nameplate {
+    height: 14px;
+    padding: 1px 5px;
+  }
+
+  .card-name {
+    font-size: 9px;
+  }
+
+  .card-main {
+    grid-template-columns: 32px 1fr;
+    gap: 4px;
+  }
+
+  .card-main-right {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px;
+    align-items: start;
+    min-width: 0;
+  }
+
+  .card-art {
+    width: 32px;
+    height: 32px;
+    padding: 2px;
+  }
+
+  .card-monogram {
+    font-size: 12px;
+  }
+
+  .card-stats {
+    height: 40px;
+    width: 48px;
+  }
+
+  .stat-row {
+    height: 20px;
+    grid-template-columns: 6px 1fr auto;
+    padding: 0 4px 0 3px;
+  }
+
+  .stat-value {
+    font-size: 9px;
+  }
+
+  .stat-icon {
+    font-size: 8px;
+  }
+
+  .stat-label {
+    font-size: 7px;
+  }
+
+  .card-slots {
+    display: grid;
+    grid-template-columns: repeat(2, 10px);
+    grid-auto-rows: 10px;
+    gap: 2px;
+    min-height: 0;
+    padding-left: 0;
+    align-content: start;
+    justify-content: start;
+  }
+
+  .card-slot {
+    width: 10px;
+    height: 10px;
+  }
+
+  .card-rules {
+    padding: 3px 5px;
+    font-size: 7.2px;
+    line-height: 1.15;
+    min-height: 24px;
+    -webkit-line-clamp: 2;
+  }
+
+  .card-rules.empty {
+    min-height: 24px;
+  }
+}
+
+.game-card.hide-cost {
+  margin-top: 0;
+}
+
 .card-cost {
   position: absolute;
   top: -8px;
