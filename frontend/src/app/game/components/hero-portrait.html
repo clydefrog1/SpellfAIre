@@ -3,13 +3,48 @@
   [class.player]="side() === 'player'"
   [class.opponent]="side() === 'opponent'"
   [class.highlighted]="highlighted()"
+  [class.disabled]="disabled()"
+  [class.attention-even]="isAttentionEven()"
+  [class.attention-odd]="isAttentionOdd()"
+  [class.attack-targeted]="isAttackTargeted()"
+  [class.attack-targeted-even]="isAttackTargetedEven()"
+  [class.attack-targeted-odd]="isAttackTargetedOdd()"
   [class.damaged]="isDamaged()"
   [class.critical]="isCritical()"
+  [class.hit-damage]="hitFx()?.kind === 'damage'"
+  [class.hit-heal]="hitFx()?.kind === 'heal'"
+  [class.hit-even]="hitEven()"
+  [class.hit-odd]="hitOdd()"
   (click)="onClick()"
   role="button"
-  tabindex="0"
+  [attr.tabindex]="disabled() ? -1 : 0"
+  [attr.aria-disabled]="disabled()"
   [attr.aria-label]="(side() === 'player' ? 'Your' : 'Enemy') + ' Hero: ' + health() + ' HP'"
 >
+  @if (spellFx()) {
+    <div
+      class="spell-impact"
+      [class.benefit]="spellFx()!.kind === 'benefit'"
+      [class.harm]="spellFx()!.kind === 'harm'"
+      [class.spell-even]="spellEven()"
+      [class.spell-odd]="spellOdd()"
+      aria-hidden="true"
+    ></div>
+  }
+
+  @if (floatFx()) {
+    <div
+      class="combat-float"
+      [class.damage]="floatFx()!.kind === 'damage'"
+      [class.heal]="floatFx()!.kind === 'heal'"
+      [class.float-even]="floatEven()"
+      [class.float-odd]="floatOdd()"
+      aria-hidden="true"
+    >
+      {{ floatFx()!.kind === 'damage' ? '-' : '+' }}{{ floatFx()!.value }}
+    </div>
+  }
+
   <!-- Card header: type label -->
   <div class="hero-card-type">
     @if (side() === 'player') { YOUR HERO } @else { ENEMY HERO }

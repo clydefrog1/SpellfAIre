@@ -162,6 +162,11 @@ export class GameService {
       const resp = await firstValueFrom(
         this.http.post<GameActionResponse>(`${this.baseUrl}/api/games/${gameId}/end-turn`, {})
       );
+
+      // Small pacing delay before applying the opponent/AI action results.
+      // This helps the player mentally prepare for incoming combat visuals.
+      await new Promise<void>(resolve => window.setTimeout(resolve, 650));
+
       this.applyResponse(resp);
       return true;
     } catch (e: any) {
