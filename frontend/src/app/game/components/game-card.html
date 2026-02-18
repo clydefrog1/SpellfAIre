@@ -22,9 +22,7 @@
 
   <!-- Playable action hint -->
   @if (playable()) {
-    <div class="playable-action-tip" role="tooltip">
-      @if (isCreature()) { Play to field } @else { Cast this spell }
-    </div>
+    <div class="playable-action-tip" role="tooltip">{{ playableTip() }}</div>
   }
 
   <!-- Nameplate -->

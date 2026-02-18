@@ -1,28 +1,19 @@
 <!-- Game Board Layout -->
 <div class="game-board" [class.targeting]="targetMode() !== 'none'">
 
-  <!-- Opponent Side -->
-  <section class="board-row opponent-info">
+  <!-- Enemy Hero (top of screen) -->
+  <div class="top-hero-bar">
     <app-hero-portrait
       [health]="opponentState()?.heroHealth ?? 0"
       [maxHealth]="25"
       side="opponent"
       [highlighted]="selectedTargetId() === 'ENEMY_HERO'"
+      [currentMana]="opponentState()?.currentMana ?? 0"
+      [maxMana]="opponentState()?.maxMana ?? 0"
+      [deckCount]="opponentState()?.deck?.length ?? 0"
       (heroClick)="onEnemyHeroClick()"
     />
-    <app-mana-bar
-      [current]="opponentState()?.currentMana ?? 0"
-      [max]="opponentState()?.maxMana ?? 0"
-    />
-    <div class="opponent-hand-count">
-      <span class="hand-icon">🂠</span>
-      <span>{{ opponentState()?.hand?.length ?? 0 }}</span>
-    </div>
-    <div class="deck-count">
-      <span class="deck-icon">📚</span>
-      <span>{{ opponentState()?.deck?.length ?? 0 }}</span>
-    </div>
-  </section>
+  </div>
 
   <!-- Opponent Battlefield -->
   <section class="board-row battlefield opponent-field">
@@ -42,16 +33,86 @@
     }
   </section>
 
-  <!-- Center Divider -->
+  <!-- Center Divider (consolidated action bar) -->
   <div class="board-divider">
-    <span class="turn-indicator" [@turnPulse]="isMyTurn() ? 'active' : 'waiting'">
-      @if (isMyTurn()) {
-        Your Turn
-      } @else {
-        Opponent's Turn
+
+    <!-- Far left: cancel (only during targeting) -->
+    <div class="divider-left">
+      @if (targetMode() !== 'none') {
+        <button class="sf-button cancel-btn divider-btn" type="button" (click)="cancelSelection()">✕ Cancel</button>
       }
-    </span>
-    <span class="turn-number">Turn {{ game()?.turnNumber }}</span>
+    </div>
+
+    <!-- Center cluster: [Attack] [Turn Info] [End Turn] -->
+    <div class="divider-middle">
+      <div class="divider-action-left">
+        @if (targetMode() === 'attack' && selectedAttackerId()) {
+          <button
+            class="sf-button attack-btn divider-btn"
+            type="button"
+            (click)="executeAttack()"
+            [disabled]="loading() || !readyToAttack()"
+          >⚔️ Attack</button>
+        }
+      </div>
+
+      <!-- Turn info / targeting message -->
+      <div class="turn-info">
+        @if (targetMode() === 'spell') {
+          <div class="targeting-message">
+            <span class="target-icon">✨</span>
+            <div class="target-text">
+              <strong>Spell Targeting</strong>
+              <small>Click a creature or hero to cast your spell</small>
+            </div>
+          </div>
+        } @else if (targetMode() === 'attack') {
+          <div class="targeting-message">
+            <span class="target-icon">⚔️</span>
+            <div class="target-text">
+              @if (selectedTargetId()) {
+                <strong>Target Selected!</strong>
+                <small>Click Attack to execute, or Cancel</small>
+              } @else {
+                <strong>Choose Target</strong>
+                <small>Click an enemy creature or hero</small>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="turn-status">
+            <span class="turn-indicator" [@turnPulse]="isMyTurn() ? 'active' : 'waiting'">
+              @if (isMyTurn()) { Your Turn } @else { Opponent's Turn }
+            </span>
+            <span class="turn-meta">
+              Turn {{ game()?.turnNumber }}
+              @if (isMyTurn() && !loading()) {
+                &nbsp;&bull;&nbsp;<strong>Play cards</strong> or <strong>Attack</strong>
+              }
+            </span>
+          </div>
+        }
+      </div>
+
+      <div class="divider-action-right">
+        <button
+          class="sf-button action-btn end-turn-btn divider-btn"
+          type="button"
+          [disabled]="!isMyTurn() || loading()"
+          (click)="endTurn()"
+        >End Turn</button>
+      </div>
+    </div>
+
+    <!-- Far right: surrender -->
+    <div class="divider-far-right">
+      <button
+        class="sf-button surrender-btn divider-btn"
+        type="button"
+        [disabled]="loading()"
+        (click)="surrender()"
+      >Surrender</button>
+    </div>
   </div>
 
   @if (showTutorialHint() && isMyTurn() && !loading() && (myState()?.battlefield?.length ?? 0) > 0) {
@@ -62,7 +123,7 @@
         <ol>
           <li>Click your creature with a 🗡️ sword icon</li>
           <li>Click an enemy creature or the enemy hero</li>
-          <li>Click the ⚔️ Attack button to execute</li>
+          <li>Click the ⚔️ Attack button in the divider bar</li>
         </ol>
       </div>
     </div>
@@ -86,30 +147,11 @@
     }
   </section>
 
-  <!-- Player Info -->
-  <section class="board-row player-info">
-    <app-hero-portrait
-      [health]="myState()?.heroHealth ?? 0"
-      [maxHealth]="25"
-      side="player"
-      [highlighted]="targetMode() === 'spell'"
-      (heroClick)="onMyHeroClick()"
-    />
-    <app-mana-bar
-      [current]="myState()?.currentMana ?? 0"
-      [max]="myState()?.maxMana ?? 0"
-    />
-    <div class="deck-count">
-      <span class="deck-icon">📚</span>
-      <span>{{ myState()?.deck?.length ?? 0 }}</span>
-    </div>
-  </section>
-
-  <!-- Player Hand -->
+  <!-- Player Hand: [Creatures | Hero card center stub | Spells] -->
   <section class="board-row hand-row">
-    <!-- Creatures group -->
-    @if (handCreatures().length > 0) {
-      <div class="hand-group">
+    <!-- Creatures group (left) -->
+    <div class="hand-group hand-group-creatures">
+      @if (handCreatures().length > 0) {
         <span class="hand-group-label">Creatures</span>
         <div class="hand-group-cards">
           @for (card of handCreatures(); track card.id) {
@@ -123,12 +165,29 @@
             />
           }
         </div>
-      </div>
-    }
+      } @else {
+        <span class="hand-group-empty">No creatures</span>
+      }
+    </div>
 
-    <!-- Spells group -->
-    @if (handSpells().length > 0) {
-      <div class="hand-group">
+    <!-- Center: Player hero card in hand zone -->
+    <div class="hand-hero-anchor">
+      <!-- Player hero -->
+      <app-hero-portrait
+        [health]="myState()?.heroHealth ?? 0"
+        [maxHealth]="25"
+        side="player"
+        [highlighted]="targetMode() === 'spell'"
+        [currentMana]="myState()?.currentMana ?? 0"
+        [maxMana]="myState()?.maxMana ?? 0"
+        [deckCount]="myState()?.deck?.length ?? 0"
+        (heroClick)="onMyHeroClick()"
+      />
+    </div>
+
+    <!-- Spells group (right) -->
+    <div class="hand-group hand-group-spells">
+      @if (handSpells().length > 0) {
         <span class="hand-group-label">Spells</span>
         <div class="hand-group-cards">
           @for (card of handSpells(); track card.id) {
@@ -142,87 +201,15 @@
             />
           }
         </div>
-      </div>
-    }
-
-    @if (handCards().length === 0) {
-      <div class="empty-hand">No cards in hand</div>
-    }
-  </section>
-
-  <!-- Action Bar -->
-  <div class="action-bar">
-    @if (targetMode() === 'spell') {
-      <div class="targeting-banner">
-        <button class="sf-button cancel-btn" type="button" (click)="cancelSelection()">
-          ✕ Cancel
-        </button>
-        <div class="targeting-message">
-          <span class="target-icon">✨</span>
-          <div class="target-text">
-            <strong>Spell Targeting</strong>
-            <small>Click a creature or hero to cast your spell</small>
-          </div>
-        </div>
-      </div>
-    } @else if (targetMode() === 'attack') {
-      <div class="targeting-banner">
-        <button class="sf-button cancel-btn" type="button" (click)="cancelSelection()">
-          ✕ Cancel
-        </button>
-        <div class="targeting-message">
-          <span class="target-icon">⚔️</span>
-          <div class="target-text">
-            @if (selectedTargetId()) {
-              <strong>Target Selected!</strong>
-              <small>Click "Attack" to execute, or click Cancel</small>
-            } @else {
-              <strong>Choose Attack Target</strong>
-              <small>Click an enemy creature or the enemy hero</small>
-            }
-          </div>
-        </div>
-        @if (readyToAttack()) {
-          <button
-            class="sf-button attack-btn"
-            type="button"
-            (click)="executeAttack()"
-            [disabled]="loading()"
-          >
-            ⚔️ Attack
-          </button>
-        }
-      </div>
-    } @else {
-      @if (isMyTurn() && !loading()) {
-        <div class="turn-instructions">
-          <span class="instruction-icon">💡</span>
-          <span class="instruction-text">
-            <strong>Your Turn:</strong> Play cards from hand • Click creatures with 🗡️ to attack
-          </span>
-        </div>
+      } @else {
+        <span class="hand-group-empty">No spells</span>
       }
-    }
-    <button
-      class="sf-button action-btn end-turn-btn"
-      type="button"
-      [disabled]="!isMyTurn() || loading()"
-      (click)="endTurn()"
-    >
-      End Turn
-    </button>
-    <button
-      class="sf-button action-btn surrender-btn"
-      type="button"
-      [disabled]="loading()"
-      (click)="surrender()"
-    >
-      Surrender
-    </button>
-  </div>
+    </div>
+  </section>
 
   <!-- Event Log -->
   <app-game-event-log [events]="events()" />
+
 
   <!-- Game Over Overlay -->
   @if (isGameOver()) {

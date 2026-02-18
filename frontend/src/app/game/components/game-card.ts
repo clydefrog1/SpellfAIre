@@ -18,6 +18,10 @@ export class GameCard {
   readonly isCreature = computed(() => this.card().cardType === 'CREATURE');
   readonly isSpell = computed(() => this.card().cardType === 'SPELL');
 
+  readonly playableTip = computed(() =>
+    this.card().cardType === 'CREATURE' ? 'Summon to Battlefield' : 'Cast this spell'
+  );
+
   readonly keywords = computed(() => {
     const maybeKeywords = (this.card() as unknown as { keywords?: string[] | null }).keywords;
     return Array.isArray(maybeKeywords) ? maybeKeywords : [];

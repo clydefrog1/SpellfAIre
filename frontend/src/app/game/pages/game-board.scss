@@ -1,10 +1,12 @@
 .game-board {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  padding: var(--sf-space-sm);
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+  padding: var(--sf-space-xs) var(--sf-space-sm);
   position: relative;
-  overflow-x: hidden; /* allow tooltips to overflow upward */
+  box-sizing: border-box;
 
   &.targeting {
     cursor: crosshair;
@@ -18,12 +20,20 @@
       z-index: 1;
     }
     
-    .opponent-field,
-    .opponent-info {
+    .opponent-field {
       position: relative;
       z-index: 2;
     }
   }
+}
+
+// ── Top Hero Bar ──
+
+.top-hero-bar {
+  display: flex;
+  justify-content: center;
+  padding: var(--sf-space-xs) 0;
+  flex-shrink: 0;
 }
 
 // ── Rows ──
@@ -37,61 +47,81 @@
   flex-shrink: 0;
 }
 
-// ── Info rows ──
-
-.opponent-info,
-.player-info {
-  gap: var(--sf-space-lg);
-  padding: var(--sf-space-sm) var(--sf-space-lg);
-}
-
-.opponent-hand-count,
 .deck-count {
   display: flex;
   align-items: center;
   gap: var(--sf-space-xs);
-  font-size: var(--sf-font-size-sm);
+  font-size: 11px;
   color: var(--sf-text-muted);
-  padding: var(--sf-space-xs) var(--sf-space-sm);
-  background: rgba(24, 32, 36, 0.6);
-  border-radius: var(--sf-radius);
-  border: 1px solid var(--sf-border);
+  white-space: nowrap;
 }
 
 .hand-icon,
 .deck-icon {
-  font-size: 18px;
+  font-size: 14px;
 }
 
 // ── Battlefield ──
 
 .battlefield {
-  min-height: 100px;
-  flex: 1;
+  flex: 0 0 auto;
+  height: 14vh;
+  min-height: 78px;
+  max-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   gap: var(--sf-space-sm);
-  padding: var(--sf-space-md);
+  padding: var(--sf-space-xs) var(--sf-space-md);
   border-radius: var(--sf-radius-lg);
   position: relative;
+  border: 1px solid rgba(60, 77, 85, 0.45);
+  box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+
+  // Subtle stone-tile texture overlay
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 39px,
+        rgba(255, 255, 255, 0.012) 39px,
+        rgba(255, 255, 255, 0.012) 40px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 79px,
+        rgba(255, 255, 255, 0.012) 79px,
+        rgba(255, 255, 255, 0.012) 80px
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 .opponent-field {
   background: linear-gradient(180deg,
-    rgba(168, 126, 212, 0.04) 0%,
-    rgba(24, 32, 36, 0.3) 100%
+    rgba(168, 126, 212, 0.12) 0%,
+    rgba(18, 20, 28, 0.75) 100%
   );
-  border-bottom: 1px solid rgba(60, 77, 85, 0.3);
+  border-color: rgba(168, 126, 212, 0.25);
+  border-top: 2px solid rgba(168, 126, 212, 0.35);
 }
 
 .player-field {
   background: linear-gradient(0deg,
-    rgba(91, 141, 217, 0.04) 0%,
-    rgba(24, 32, 36, 0.3) 100%
+    rgba(91, 141, 217, 0.12) 0%,
+    rgba(18, 20, 28, 0.75) 100%
   );
-  border-top: 1px solid rgba(60, 77, 85, 0.3);
+  border-color: rgba(91, 141, 217, 0.25);
+  border-bottom: 2px solid rgba(91, 141, 217, 0.35);
 }
 
 .empty-field {
@@ -100,67 +130,155 @@
   font-style: italic;
 }
 
-// ── Center Divider ──
+// ── Center Divider (consolidated action bar) ──
+// Background mirrors the old turn-instructions tint (cyan)
 
 .board-divider {
   display: flex;
   align-items: center;
+  gap: var(--sf-space-xs);
+  padding: var(--sf-space-xs) var(--sf-space-md);
+  background: rgba(142, 201, 217, 0.08);
+  border-top: 1px solid rgba(142, 201, 217, 0.2);
+  border-bottom: 1px solid rgba(142, 201, 217, 0.2);
+  flex-shrink: 0;
+}
+
+// Far-left: cancel (only during targeting modes)
+.divider-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sf-space-xs);
+  flex-shrink: 0;
+}
+
+// Center cluster: [Attack] [Turn Info] [End Turn]
+.divider-middle {
+  display: flex;
+  align-items: center;
   justify-content: center;
-  gap: var(--sf-space-lg);
-  padding: var(--sf-space-xs) 0;
+  gap: var(--sf-space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.divider-action-left,
+.divider-action-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.turn-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-width: 0;
+}
+
+.turn-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+// Far-right: surrender
+.divider-far-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .turn-indicator {
   font-weight: 700;
-  font-size: var(--sf-font-size-base);
+  font-size: 13px;
   color: var(--sf-accent);
-  padding: var(--sf-space-xs) var(--sf-space-lg);
+  padding: 3px var(--sf-space-md);
   background: rgba(217, 163, 90, 0.1);
   border: 1px solid rgba(217, 163, 90, 0.3);
   border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 1px;
+  white-space: nowrap;
 }
 
-.turn-number {
-  font-size: var(--sf-font-size-sm);
-  color: var(--sf-text-muted);
+.turn-meta {
+  font-size: 10px;
+  color: var(--sf-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+
+  strong {
+    color: var(--sf-accent);
+    font-weight: 600;
+  }
+}
+
+// Buttons inside the divider bar are more compact
+.divider-btn {
+  padding: var(--sf-space-xs) var(--sf-space-md) !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.attack-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: saturate(0.65);
 }
 
 // ── Hand ──
 
 .hand-row {
-  min-height: 140px;
-  padding: var(--sf-space-sm) var(--sf-space-lg);
-  overflow-x: auto;
-  overflow-y: visible; /* allow tooltips to overflow upward */
-  flex-shrink: 0;
-  gap: var(--sf-space-md);
-  justify-content: center;
+  display: flex;
   align-items: flex-end;
-
-  // Subtle glow behind hand
+  justify-content: center;
+  gap: 0;
+  padding: var(--sf-space-xs) var(--sf-space-sm);
+  overflow-x: auto;
+  overflow-y: visible;
+  flex-shrink: 0;
   background: linear-gradient(0deg,
     rgba(24, 32, 36, 0.5) 0%,
     transparent 100%
   );
 }
 
-// Hand groups (Creatures / Spells)
+// Left/right hand groups fill available space equally
 .hand-group {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  flex: 1;
+  overflow: visible;
+  padding: 0 var(--sf-space-xs);
+}
+
+.hand-group-creatures {
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.hand-group-spells {
+  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .hand-group-label {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--sf-text-light);
   opacity: 0.7;
+  align-self: center;
 }
 
 .hand-group-cards {
@@ -168,38 +286,35 @@
   flex-direction: row;
   align-items: flex-end;
   gap: var(--sf-space-xs);
-}
-
-// Divider between the two groups
-.hand-group + .hand-group {
-  border-left: 1px solid rgba(255, 255, 255, 0.07);
-  padding-left: var(--sf-space-md);
-}
-
-.empty-hand {
-  color: var(--sf-text-light);
-  font-size: var(--sf-font-size-sm);
-  font-style: italic;
-}
-
-// ── Action Bar ──
-
-.action-bar {
-  display: flex;
-  align-items: center;
+  overflow: visible;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: var(--sf-space-md);
-  padding: var(--sf-space-sm) var(--sf-space-lg);
-  flex-shrink: 0;
 }
 
-.action-btn {
-  padding: var(--sf-space-sm) var(--sf-space-xl);
-  font-size: var(--sf-font-size-sm);
+.hand-group-empty {
+  font-size: 10px;
+  color: var(--sf-text-light);
+  font-style: italic;
+  opacity: 0.5;
+  padding: var(--sf-space-sm);
 }
+
+// Hero cards anchored in the center of the hand row
+.hand-hero-anchor {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: var(--sf-space-sm);
+  padding: 0 var(--sf-space-md);
+  flex-shrink: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+// ── Action buttons (in divider) ──
 
 .end-turn-btn {
-  min-width: 120px;
+  min-width: 90px;
 }
 
 .surrender-btn {
@@ -234,74 +349,32 @@
   }
 }
 
-.targeting-banner {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-lg);
-  padding: var(--sf-space-md) var(--sf-space-xl);
-  background: linear-gradient(135deg, 
-    rgba(217, 163, 90, 0.15),
-    rgba(217, 163, 90, 0.08)
-  );
-  border: 2px solid rgba(217, 163, 90, 0.4);
-  border-radius: var(--sf-radius-lg);
-  box-shadow: 0 0 24px rgba(217, 163, 90, 0.3);
-  animation: targetingPulse 2s ease-in-out infinite;
-  flex: 1;
-}
-
-@keyframes targetingPulse {
-  0%, 100% { box-shadow: 0 0 24px rgba(217, 163, 90, 0.3); }
-  50% { box-shadow: 0 0 32px rgba(217, 163, 90, 0.5); }
-}
-
 .targeting-message {
   display: flex;
   align-items: center;
-  gap: var(--sf-space-md);
-  flex: 1;
+  gap: var(--sf-space-sm);
 }
 
 .target-icon {
-  font-size: 28px;
+  font-size: 20px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .target-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   
   strong {
     color: var(--sf-accent);
-    font-size: var(--sf-font-size-base);
+    font-size: 13px;
   }
   
   small {
     color: var(--sf-text-muted);
-    font-size: 13px;
+    font-size: 11px;
   }
-}
-
-.turn-instructions {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-sm);
-  padding: var(--sf-space-sm) var(--sf-space-md);
-  background: rgba(142, 201, 217, 0.1);
-  border: 1px solid rgba(142, 201, 217, 0.3);
-  border-radius: var(--sf-radius);
-  color: var(--sf-text-muted);
-  font-size: 13px;
-  flex: 1;
-  
-  strong {
-    color: var(--sf-accent);
-  }
-}
-
-.instruction-icon {
-  font-size: 18px;
 }
 
 .cancel-btn {

@@ -10,13 +10,50 @@
   tabindex="0"
   [attr.aria-label]="(side() === 'player' ? 'Your' : 'Enemy') + ' Hero: ' + health() + ' HP'"
 >
-  <div class="hero-icon">
-    @if (side() === 'player') { ⚔️ } @else { 👹 }
+  <!-- Card header: type label -->
+  <div class="hero-card-type">
+    @if (side() === 'player') { YOUR HERO } @else { ENEMY HERO }
   </div>
-  <div class="hero-health">
-    <span class="hp-value">{{ health() }}</span>
-    <span class="hp-label">HP</span>
+
+  <!-- Hero art / icon -->
+  <div class="hero-art">
+    <div class="hero-art-inner">
+      <div class="hero-icon">
+        @if (side() === 'player') { ⚔️ } @else { 👹 }
+      </div>
+    </div>
   </div>
+
+  <!-- Nameplate -->
+  <div class="hero-nameplate">
+    <span class="hero-name">
+      @if (side() === 'player') { Champion } @else { Dark Mage }
+    </span>
+  </div>
+
+  <!-- Stats block -->
+  <div class="hero-stats">
+    <div class="hero-stat-row">
+      <span class="hero-stat-value">{{ health() }}</span>
+      <span class="hero-stat-icon">❤️</span>
+      <span class="hero-stat-label">HP</span>
+    </div>
+
+    <!-- Mana row -->
+    @if (maxMana() > 0) {
+      <div class="hero-mana-row">
+        <app-mana-bar [current]="currentMana()" [max]="maxMana()" />
+      </div>
+    }
+
+    <!-- Deck row -->
+    <div class="hero-deck-row">
+      <span class="hero-deck-icon">📚</span>
+      <span class="hero-deck-count">{{ deckCount() }}</span>
+    </div>
+  </div>
+
+  <!-- HP bar -->
   <div class="hp-bar">
     <div class="hp-fill" [style.width.%]="healthPercent()"></div>
   </div>
