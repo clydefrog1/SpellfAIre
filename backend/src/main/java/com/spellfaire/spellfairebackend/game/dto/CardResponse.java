@@ -21,6 +21,7 @@ public class CardResponse {
 	private Set<Keyword> keywords;
 	private MagicSchool school;
 	private String rulesText;
+	private String flavorText;
 
 	// Getters and setters
 	public String getId() {
@@ -101,5 +102,13 @@ public class CardResponse {
 
 	public void setRulesText(String rulesText) {
 		this.rulesText = rulesText;
+	}
+
+	public String getFlavorText() {
+		return flavorText;
+	}
+
+	public void setFlavorText(String flavorText) {
+		this.flavorText = flavorText;
 	}
 }

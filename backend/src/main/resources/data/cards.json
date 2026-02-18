@@ -7,7 +7,8 @@
     "health": 2,
     "faction": "KINGDOM",
     "keywords": ["GUARD"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "The first line of a kingdom is not the king, but the man with the spear."
   },
   {
     "name": "Squire Captain",
@@ -17,7 +18,8 @@
     "health": 2,
     "faction": "KINGDOM",
     "keywords": [],
-    "rulesText": "When played, give another friendly creature +1 Health."
+    "rulesText": "When played, give another friendly creature +1 Health.",
+    "flavorText": "Lead well and others will stand taller."
   },
   {
     "name": "Banner Knight",
@@ -27,7 +29,8 @@
     "health": 3,
     "faction": "KINGDOM",
     "keywords": [],
-    "rulesText": "When played, if you control a Guard creature, gain +1 Attack."
+    "rulesText": "When played, if you control a Guard creature, gain +1 Attack.",
+    "flavorText": "Where the banner rises, so does morale."
   },
   {
     "name": "Chapel Healer",
@@ -37,7 +40,8 @@
     "health": 4,
     "faction": "KINGDOM",
     "keywords": [],
-    "rulesText": "When played, heal your Hero for 3."
+    "rulesText": "When played, heal your Hero for 3.",
+    "flavorText": "Light duty, heavy burden."
   },
   {
     "name": "Shield Marshal",
@@ -47,7 +51,8 @@
     "health": 5,
     "faction": "KINGDOM",
     "keywords": ["GUARD"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "He has held the line since before your father was born."
   },
   {
     "name": "Royal Tactician",
@@ -57,7 +62,8 @@
     "health": 5,
     "faction": "KINGDOM",
     "keywords": [],
-    "rulesText": "Start of your turn: give a random friendly creature +1/+1."
+    "rulesText": "Start of your turn: give a random friendly creature +1/+1.",
+    "flavorText": "Victory is decided long before the first blow."
   },
   {
     "name": "High Paladin",
@@ -67,7 +73,8 @@
     "health": 6,
     "faction": "KINGDOM",
     "keywords": ["LIFESTEAL"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "His wounds are the kingdom's strength."
   },
   {
     "name": "Razor Cub",
@@ -77,7 +84,8 @@
     "health": 1,
     "faction": "WILDCLAN",
     "keywords": ["CHARGE"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "Small claws, sharp instincts."
   },
   {
     "name": "Pack Runner",
@@ -87,7 +95,8 @@
     "health": 2,
     "faction": "WILDCLAN",
     "keywords": [],
-    "rulesText": "When played, if you control another Beast, gain +1 Attack."
+    "rulesText": "When played, if you control another Beast, gain +1 Attack.",
+    "flavorText": "Alone it hunts. Together it conquers."
   },
   {
     "name": "Bristleback",
@@ -97,7 +106,8 @@
     "health": 2,
     "faction": "WILDCLAN",
     "keywords": ["CHARGE"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "A thousand quills say: do not pursue."
   },
   {
     "name": "Alpha Howler",
@@ -107,7 +117,8 @@
     "health": 4,
     "faction": "WILDCLAN",
     "keywords": [],
-    "rulesText": "When played, give your other creatures +1 Attack this turn."
+    "rulesText": "When played, give your other creatures +1 Attack this turn.",
+    "flavorText": "One howl, and the whole forest obeys."
   },
   {
     "name": "Thicket Stalker",
@@ -117,7 +128,8 @@
     "health": 4,
     "faction": "WILDCLAN",
     "keywords": [],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "It was watching you before you entered the thicket."
   },
   {
     "name": "Frenzied Mauler",
@@ -127,7 +139,8 @@
     "health": 4,
     "faction": "WILDCLAN",
     "keywords": [],
-    "rulesText": "When played, deal 1 damage to your Hero. Gain Charge."
+    "rulesText": "When played, deal 1 damage to your Hero. Gain Charge.",
+    "flavorText": "Pain only makes it faster."
   },
   {
     "name": "Elder Mammoth",
@@ -137,7 +150,8 @@
     "health": 7,
     "faction": "WILDCLAN",
     "keywords": [],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "The earth remembers every step."
   },
   {
     "name": "Grave Rat",
@@ -147,7 +161,8 @@
     "health": 2,
     "faction": "NECROPOLIS",
     "keywords": [],
-    "rulesText": "When this dies, draw a card."
+    "rulesText": "When this dies, draw a card.",
+    "flavorText": "Even in death, it delivers."
   },
   {
     "name": "Bone Acolyte",
@@ -157,7 +172,8 @@
     "health": 2,
     "faction": "NECROPOLIS",
     "keywords": [],
-    "rulesText": "When played, deal 1 damage to any target."
+    "rulesText": "When played, deal 1 damage to any target.",
+    "flavorText": "Knowledge carved from those who no longer need it."
   },
   {
     "name": "Ghoul",
@@ -167,7 +183,8 @@
     "health": 3,
     "faction": "NECROPOLIS",
     "keywords": ["LIFESTEAL"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "It feeds on the living because it cannot let go of them."
   },
   {
     "name": "Crypt Warden",
@@ -177,7 +194,8 @@
     "health": 5,
     "faction": "NECROPOLIS",
     "keywords": ["GUARD"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "It guards a door no one remembers opening."
   },
   {
     "name": "Soul Collector",
@@ -187,7 +205,8 @@
     "health": 3,
     "faction": "NECROPOLIS",
     "keywords": [],
-    "rulesText": "When this dies, heal your Hero for 3."
+    "rulesText": "When this dies, heal your Hero for 3.",
+    "flavorText": "Death is not the end of its service."
   },
   {
     "name": "Rotting Giant",
@@ -197,7 +216,8 @@
     "health": 6,
     "faction": "NECROPOLIS",
     "keywords": [],
-    "rulesText": "When played, you take 2 damage."
+    "rulesText": "When played, you take 2 damage.",
+    "flavorText": "Power that costs you is still power."
   },
   {
     "name": "Lich Adept",
@@ -207,7 +227,8 @@
     "health": 7,
     "faction": "NECROPOLIS",
     "keywords": [],
-    "rulesText": "Start of your turn: return a random creature that died under your control to your hand if its cost is 3 or less."
+    "rulesText": "Start of your turn: return a random creature that died under your control to your hand if its cost is 3 or less.",
+    "flavorText": "Nothing stays lost in the Necropolis."
   },
   {
     "name": "Copper Drone",
@@ -217,7 +238,8 @@
     "health": 2,
     "faction": "IRONBOUND",
     "keywords": ["WARD"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "Built to absorb. Designed to endure."
   },
   {
     "name": "Rivet Guard",
@@ -227,7 +249,8 @@
     "health": 3,
     "faction": "IRONBOUND",
     "keywords": ["GUARD"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "Three thousand rivets. Not one has ever given way."
   },
   {
     "name": "Arc Sparkbot",
@@ -237,7 +260,8 @@
     "health": 3,
     "faction": "IRONBOUND",
     "keywords": [],
-    "rulesText": "When played, deal 1 damage to an enemy creature."
+    "rulesText": "When played, deal 1 damage to an enemy creature.",
+    "flavorText": "The arc does not discriminate."
   },
   {
     "name": "Plating Engineer",
@@ -247,7 +271,8 @@
     "health": 4,
     "faction": "IRONBOUND",
     "keywords": [],
-    "rulesText": "When played, give another friendly creature Ward."
+    "rulesText": "When played, give another friendly creature Ward.",
+    "flavorText": "An extra layer of iron can mean the difference between legacy and rubble."
   },
   {
     "name": "Steel Sentinel",
@@ -257,7 +282,8 @@
     "health": 5,
     "faction": "IRONBOUND",
     "keywords": [],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "It has stood at this post longer than any commander has lived."
   },
   {
     "name": "Overclock Colossus",
@@ -267,7 +293,8 @@
     "health": 7,
     "faction": "IRONBOUND",
     "keywords": [],
-    "rulesText": "When played, deal 2 damage to your Hero. Gain +1 Attack."
+    "rulesText": "When played, deal 2 damage to your Hero. Gain +1 Attack.",
+    "flavorText": "The engineers warned against running it at full speed. Twice."
   },
   {
     "name": "Titan Forgeguard",
@@ -277,7 +304,8 @@
     "health": 9,
     "faction": "IRONBOUND",
     "keywords": ["GUARD"],
-    "rulesText": null
+    "rulesText": null,
+    "flavorText": "Forged in the deepest furnace. Unmoved by everything since."
   },
   {
     "name": "Ember Bolt",
@@ -288,7 +316,8 @@
     "faction": null,
     "keywords": null,
     "school": "FIRE",
-    "rulesText": "Deal 2 damage to any target."
+    "rulesText": "Deal 2 damage to any target.",
+    "flavorText": "Quick. Cheap. Effective. — field manual, Fire school"
   },
   {
     "name": "Searing Ping",
@@ -299,7 +328,8 @@
     "faction": null,
     "keywords": null,
     "school": "FIRE",
-    "rulesText": "Deal 1 damage to all enemy creatures."
+    "rulesText": "Deal 1 damage to all enemy creatures.",
+    "flavorText": "A single ember, scattered just right."
   },
   {
     "name": "Flame Javelin",
@@ -310,7 +340,8 @@
     "faction": null,
     "keywords": null,
     "school": "FIRE",
-    "rulesText": "Deal 4 damage to a creature."
+    "rulesText": "Deal 4 damage to a creature.",
+    "flavorText": "Thrown with precision. Lands with conviction."
   },
   {
     "name": "Combust",
@@ -321,7 +352,8 @@
     "faction": null,
     "keywords": null,
     "school": "FIRE",
-    "rulesText": "Deal 3 damage to a creature and 2 damage to the enemy Hero."
+    "rulesText": "Deal 3 damage to a creature and 2 damage to the enemy Hero.",
+    "flavorText": "It started with a spark. As it always does."
   },
   {
     "name": "Inferno Sweep",
@@ -332,7 +364,8 @@
     "faction": null,
     "keywords": null,
     "school": "FIRE",
-    "rulesText": "Deal 2 damage to all creatures."
+    "rulesText": "Deal 2 damage to all creatures.",
+    "flavorText": "Fire does not pick favorites."
   },
   {
     "name": "Final Spark",
@@ -343,7 +376,8 @@
     "faction": null,
     "keywords": null,
     "school": "FIRE",
-    "rulesText": "Deal 7 damage to the enemy Hero."
+    "rulesText": "Deal 7 damage to the enemy Hero.",
+    "flavorText": "The last thing they see is light."
   },
   {
     "name": "Ice Shard",
@@ -354,7 +388,8 @@
     "faction": null,
     "keywords": null,
     "school": "FROST",
-    "rulesText": "Deal 1 damage to a creature. Freeze it."
+    "rulesText": "Deal 1 damage to a creature. Freeze it.",
+    "flavorText": "Cold enough to still even the fastest reflex."
   },
   {
     "name": "Frost Shield",
@@ -365,7 +400,8 @@
     "faction": null,
     "keywords": null,
     "school": "FROST",
-    "rulesText": "Give a friendly creature +0/+3."
+    "rulesText": "Give a friendly creature +0/+3.",
+    "flavorText": "Ice does not bend. Neither will you."
   },
   {
     "name": "Cold Snap",
@@ -376,7 +412,8 @@
     "faction": null,
     "keywords": null,
     "school": "FROST",
-    "rulesText": "Freeze all enemy creatures."
+    "rulesText": "Freeze all enemy creatures.",
+    "flavorText": "Winter arrived before it was expected, as it always does."
   },
   {
     "name": "Shatter",
@@ -387,7 +424,8 @@
     "faction": null,
     "keywords": null,
     "school": "FROST",
-    "rulesText": "Deal 5 damage to a Frozen creature."
+    "rulesText": "Deal 5 damage to a Frozen creature.",
+    "flavorText": "Stillness has its price."
   },
   {
     "name": "Glacial Binding",
@@ -398,7 +436,8 @@
     "faction": null,
     "keywords": null,
     "school": "FROST",
-    "rulesText": "Freeze an enemy creature. It takes 3 damage."
+    "rulesText": "Freeze an enemy creature. It takes 3 damage.",
+    "flavorText": "Bound in ice. Pried apart by cold."
   },
   {
     "name": "Deep Winter",
@@ -409,7 +448,8 @@
     "faction": null,
     "keywords": null,
     "school": "FROST",
-    "rulesText": "Draw 2 cards. Freeze a random enemy creature."
+    "rulesText": "Draw 2 cards. Freeze a random enemy creature.",
+    "flavorText": "The cold gives you time to think. Use it."
   },
   {
     "name": "Mend",
@@ -420,7 +460,8 @@
     "faction": null,
     "keywords": null,
     "school": "NATURE",
-    "rulesText": "Heal your Hero for 3."
+    "rulesText": "Heal your Hero for 3.",
+    "flavorText": "The forest gives back what it can."
   },
   {
     "name": "Vine Whip",
@@ -431,7 +472,8 @@
     "faction": null,
     "keywords": null,
     "school": "NATURE",
-    "rulesText": "Deal 2 damage to an enemy creature. If it survives, it can't attack next turn."
+    "rulesText": "Deal 2 damage to an enemy creature. If it survives, it can't attack next turn.",
+    "flavorText": "Roots do not fight. They simply hold."
   },
   {
     "name": "Sproutling",
@@ -442,7 +484,8 @@
     "faction": null,
     "keywords": null,
     "school": "NATURE",
-    "rulesText": "Summon a 1/1 Sproutling creature."
+    "rulesText": "Summon a 1/1 Sproutling creature.",
+    "flavorText": "Small and fragile. Alive and here."
   },
   {
     "name": "Growth",
@@ -453,7 +496,8 @@
     "faction": null,
     "keywords": null,
     "school": "NATURE",
-    "rulesText": "Give a friendly creature +2/+2."
+    "rulesText": "Give a friendly creature +2/+2.",
+    "flavorText": "Nature rewards those patient enough to tend it."
   },
   {
     "name": "Bramble Wall",
@@ -464,7 +508,8 @@
     "faction": null,
     "keywords": null,
     "school": "NATURE",
-    "rulesText": "Summon a 0/6 creature with Guard."
+    "rulesText": "Summon a 0/6 creature with Guard.",
+    "flavorText": "Try the other road."
   },
   {
     "name": "Renewal",
@@ -475,7 +520,8 @@
     "faction": null,
     "keywords": null,
     "school": "NATURE",
-    "rulesText": "Heal your Hero for 6. Draw a card."
+    "rulesText": "Heal your Hero for 6. Draw a card.",
+    "flavorText": "What the land takes, it can also return."
   },
   {
     "name": "Dark Touch",
@@ -486,7 +532,8 @@
     "faction": null,
     "keywords": null,
     "school": "SHADOW",
-    "rulesText": "Deal 1 damage to any target. Heal your Hero for 1."
+    "rulesText": "Deal 1 damage to any target. Heal your Hero for 1.",
+    "flavorText": "Shadow takes, and shadow gives."
   },
   {
     "name": "Wither",
@@ -497,7 +544,8 @@
     "faction": null,
     "keywords": null,
     "school": "SHADOW",
-    "rulesText": "Give an enemy creature -2 Attack this turn."
+    "rulesText": "Give an enemy creature -2 Attack this turn.",
+    "flavorText": "Doubt is heavier than iron."
   },
   {
     "name": "Siphon Life",
@@ -508,7 +556,8 @@
     "faction": null,
     "keywords": null,
     "school": "SHADOW",
-    "rulesText": "Deal 3 damage to the enemy Hero. Heal your Hero for 3."
+    "rulesText": "Deal 3 damage to the enemy Hero. Heal your Hero for 3.",
+    "flavorText": "Their loss is precisely your gain."
   },
   {
     "name": "Grim Bargain",
@@ -519,7 +568,8 @@
     "faction": null,
     "keywords": null,
     "school": "SHADOW",
-    "rulesText": "Destroy one of your creatures. Draw 2 cards."
+    "rulesText": "Destroy one of your creatures. Draw 2 cards.",
+    "flavorText": "The price was steep. The knowledge, steeper."
   },
   {
     "name": "Haunting Fog",
@@ -530,7 +580,8 @@
     "faction": null,
     "keywords": null,
     "school": "SHADOW",
-    "rulesText": "Give all enemy creatures -1/-1."
+    "rulesText": "Give all enemy creatures -1/-1.",
+    "flavorText": "What the fog touches, it diminishes."
   },
   {
     "name": "Void Snare",
@@ -541,6 +592,7 @@
     "faction": null,
     "keywords": null,
     "school": "SHADOW",
-    "rulesText": "Destroy an enemy creature with cost 5 or less."
+    "rulesText": "Destroy an enemy creature with cost 5 or less.",
+    "flavorText": "Not gone. Just somewhere else. Somewhere worse."
   }
 ]

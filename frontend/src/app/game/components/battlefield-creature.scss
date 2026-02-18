@@ -15,6 +15,45 @@
   position: relative;
   user-select: none;
   gap: 2px;
+  overflow: visible;
+
+  // Attack action tooltip
+  .attack-action-tip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    white-space: nowrap;
+    background: rgba(12, 8, 24, 0.94);
+    color: #72b894;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border-radius: 5px;
+    border: 1px solid rgba(114, 184, 148, 0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    transition: opacity 150ms ease, transform 150ms ease;
+    z-index: 10;
+    pointer-events: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(114, 184, 148, 0.5);
+    }
+  }
+
+  &.can-attack.player:hover .attack-action-tip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 
   &.selectable {
     cursor: pointer;

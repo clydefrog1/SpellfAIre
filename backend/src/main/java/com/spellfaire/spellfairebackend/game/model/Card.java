@@ -61,6 +61,9 @@ public class Card {
 	@Column(columnDefinition = "TEXT")
 	private String rulesText;      // Effect description (can be null)
 
+	@Column(columnDefinition = "TEXT")
+	private String flavorText;     // Italic lore/flavor text (can be null)
+
 	// Constructors
 	public Card() {
 	}
@@ -144,5 +147,13 @@ public class Card {
 
 	public void setRulesText(String rulesText) {
 		this.rulesText = rulesText;
+	}
+
+	public String getFlavorText() {
+		return flavorText;
+	}
+
+	public void setFlavorText(String flavorText) {
+		this.flavorText = flavorText;
 	}
 }

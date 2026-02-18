@@ -134,6 +134,7 @@ public class DataInitializer implements CommandLineRunner {
 		sproutling.setHealth(1);
 		sproutling.setKeywords(java.util.Set.of());
 		sproutling.setRulesText("Token. Cannot be added to decks.");
+		sproutling.setFlavorText("Given sun, water, and time — it will outlast you.");
 		cardRepository.save(sproutling);
 
 		Card brambleWall = new Card();
@@ -144,6 +145,7 @@ public class DataInitializer implements CommandLineRunner {
 		brambleWall.setHealth(6);
 		brambleWall.setKeywords(java.util.Set.of(Keyword.GUARD));
 		brambleWall.setRulesText("Token. Guard. Cannot be added to decks.");
+		brambleWall.setFlavorText("Nothing passes through without a toll.");
 		cardRepository.save(brambleWall);
 
 		log.info("Loaded 2 token cards");

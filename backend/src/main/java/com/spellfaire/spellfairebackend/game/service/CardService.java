@@ -94,6 +94,7 @@ public class CardService {
 		response.setKeywords(card.getKeywords());
 		response.setSchool(card.getSchool());
 		response.setRulesText(card.getRulesText());
+		response.setFlavorText(card.getFlavorText());
 		return response;
 	}
 }

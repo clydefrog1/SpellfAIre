@@ -30,6 +30,7 @@ export interface CardResponse {
   keywords: Keyword[];
   school: MagicSchool | null;
   rulesText: string | null;
+  flavorText: string | null;
 }
 
 // ────────────────────────────────────────────────────────

@@ -17,6 +17,9 @@
   [attr.title]="getTooltip()"
   [attr.aria-label]="name() + ' ' + creature().attack + '/' + creature().health"
 >
+  @if (isAttackReady()) {
+    <div class="attack-action-tip" role="tooltip">Click to attack</div>
+  }
   <div class="bf-name">{{ name() }}</div>
 
   <div class="bf-keywords">

@@ -59,7 +59,7 @@ export class GameBoard implements OnInit {
     return this.selectedAttackerId() !== null && this.selectedTargetId() !== null;
   });
 
-  // Computed hand cards
+  // Computed hand cards — all cards, used internally
   readonly handCards = computed<CardResponse[]>(() => {
     const state = this.myState();
     if (!state) return [];
@@ -68,6 +68,20 @@ export class GameBoard implements OnInit {
       .filter((c): c is CardResponse => c !== undefined);
   });
 
+  /** Creature cards in hand, sorted by mana cost ascending. */
+  readonly handCreatures = computed<CardResponse[]>(() =>
+    this.handCards()
+      .filter(c => c.cardType === 'CREATURE')
+      .sort((a, b) => a.cost - b.cost)
+  );
+
+  /** Spell cards in hand, sorted by mana cost ascending. */
+  readonly handSpells = computed<CardResponse[]>(() =>
+    this.handCards()
+      .filter(c => c.cardType === 'SPELL')
+      .sort((a, b) => a.cost - b.cost)
+  );
+
   // Check if card can be played
   canPlayCard(card: CardResponse): boolean {
     const state = this.myState();
@@ -75,6 +89,11 @@ export class GameBoard implements OnInit {
     if (card.cost > state.currentMana) return false;
     if (card.cardType === 'CREATURE' && state.battlefield.length >= 6) return false;
     return true;
+  }
+
+  /** True when the card costs more than the player's current mana. */
+  isInsufficientMana(card: CardResponse): boolean {
+    return (this.myState()?.currentMana ?? 0) < card.cost;
   }
 
   ngOnInit(): void {

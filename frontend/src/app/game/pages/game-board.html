@@ -107,15 +107,44 @@
 
   <!-- Player Hand -->
   <section class="board-row hand-row">
-    @for (card of handCards(); track card.id) {
-      <app-game-card
-        @cardEnter
-        [card]="card"
-        [playable]="canPlayCard(card)"
-        [selected]="selectedHandCardId() === card.id"
-        (cardClick)="onHandCardClick(card)"
-      />
+    <!-- Creatures group -->
+    @if (handCreatures().length > 0) {
+      <div class="hand-group">
+        <span class="hand-group-label">Creatures</span>
+        <div class="hand-group-cards">
+          @for (card of handCreatures(); track card.id) {
+            <app-game-card
+              @cardEnter
+              [card]="card"
+              [playable]="canPlayCard(card)"
+              [insufficientMana]="isInsufficientMana(card)"
+              [selected]="selectedHandCardId() === card.id"
+              (cardClick)="onHandCardClick(card)"
+            />
+          }
+        </div>
+      </div>
     }
+
+    <!-- Spells group -->
+    @if (handSpells().length > 0) {
+      <div class="hand-group">
+        <span class="hand-group-label">Spells</span>
+        <div class="hand-group-cards">
+          @for (card of handSpells(); track card.id) {
+            <app-game-card
+              @cardEnter
+              [card]="card"
+              [playable]="canPlayCard(card)"
+              [insufficientMana]="isInsufficientMana(card)"
+              [selected]="selectedHandCardId() === card.id"
+              (cardClick)="onHandCardClick(card)"
+            />
+          }
+        </div>
+      </div>
+    }
+
     @if (handCards().length === 0) {
       <div class="empty-hand">No cards in hand</div>
     }

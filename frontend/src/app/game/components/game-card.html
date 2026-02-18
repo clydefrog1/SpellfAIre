@@ -3,6 +3,7 @@
   [class]="cardClass()"
   [class.playable]="playable()"
   [class.selected]="selected()"
+  [class.insufficient-mana]="insufficientMana()"
   [class.spell]="isSpell()"
   (click)="onClick()"
   role="button"
@@ -12,14 +13,92 @@
   <!-- Mana Cost -->
   <div class="card-cost">{{ card().cost }}</div>
 
-  <!-- Name -->
-  <div class="card-name">{{ card().name }}</div>
+  <!-- Insufficient mana tooltip -->
+  @if (insufficientMana()) {
+    <div class="not-enough-mana-tip" role="tooltip">
+      Not enough mana
+    </div>
+  }
 
-  <!-- Keywords -->
-  @if (card().keywords.length) {
-    <div class="card-keywords">
-      @for (kw of card().keywords; track kw) {
-        <span class="keyword-badge">{{ kw }}</span>
+  <!-- Playable action hint -->
+  @if (playable()) {
+    <div class="playable-action-tip" role="tooltip">
+      @if (isCreature()) { Play to field } @else { Cast this spell }
+    </div>
+  }
+
+  <!-- Nameplate -->
+  <div class="card-nameplate">
+    <div class="card-name">{{ card().name }}</div>
+  </div>
+
+  <!-- Main (Art + Stats) -->
+  <div class="card-main">
+    <div class="card-art" aria-hidden="true">
+      <div class="card-art-inner">
+        <div class="card-monogram">{{ monogram() }}</div>
+      </div>
+    </div>
+
+    <div class="card-stats" aria-label="Stats">
+      @if (card().attack !== null) {
+        <div class="stat-row">
+          <span class="stat-value">{{ card().attack }}</span>
+          <span class="stat-icon" aria-hidden="true">⚔️</span>
+          <span class="stat-label">ATK</span>
+        </div>
+      }
+
+      @if (card().health !== null) {
+        <div class="stat-row">
+          <span class="stat-value">{{ card().health }}</span>
+          <span class="stat-icon" aria-hidden="true">❤️</span>
+          <span class="stat-label">HP</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Keyword slots (icons only) -->
+  @if (keywords().length) {
+    <div class="card-slots" aria-label="Keywords">
+      @for (kw of keywords(); track kw) {
+        <span
+          class="card-slot"
+          [attr.title]="keywordTitle(kw)"
+          [attr.aria-label]="kw"
+          aria-hidden="true"
+        >
+          @switch (kw) {
+            @case ('GUARD') {
+              <!-- Shield -->
+              <svg width="12" height="12" viewBox="0 0 12 12" display="block" aria-hidden="true">
+                <path d="M6 1l4 2v3.5C10 9.1 8.3 11 6 11 3.7 11 2 9.1 2 6.5V3l4-2z" fill="currentColor" />
+                <path d="M6 2.2 3 3.6v2.9c0 1.9 1.2 3.3 3 3.7 1.8-.4 3-1.8 3-3.7V3.6L6 2.2z" fill="currentColor" opacity=".35" />
+              </svg>
+            }
+            @case ('CHARGE') {
+              <!-- Bolt -->
+              <svg width="12" height="12" viewBox="0 0 12 12" display="block" aria-hidden="true">
+                <path d="M6.6 1 2 7h3.2L4.7 11 10 4H6.8V1z" fill="currentColor" />
+              </svg>
+            }
+            @case ('WARD') {
+              <!-- Ward -->
+              <svg width="12" height="12" viewBox="0 0 12 12" display="block" aria-hidden="true">
+                <path d="M6 1l4 2v3.5C10 9.1 8.3 11 6 11 3.7 11 2 9.1 2 6.5V3l4-2z" fill="currentColor" />
+                <path d="M6 3.1l1.1 1.5L6 8.7 4.9 4.6 6 3.1z" fill="rgba(13,18,19,.55)" />
+              </svg>
+            }
+            @case ('LIFESTEAL') {
+              <!-- Lifesteal (drop) -->
+              <svg width="12" height="12" viewBox="0 0 12 12" display="block" aria-hidden="true">
+                <path d="M6 1s3 3.2 3 5.5S7.7 11 6 11 3 8.8 3 6.5 6 1 6 1z" fill="currentColor" />
+                <path d="M5.2 8.4c.3.4.7.6 1.2.6.6 0 1.1-.4 1.3-1" stroke="rgba(13,18,19,.55)" stroke-width=".6" fill="none" stroke-linecap="round" />
+              </svg>
+            }
+          }
+        </span>
       }
     </div>
   }
@@ -29,20 +108,11 @@
     <div class="card-rules">{{ card().rulesText }}</div>
   }
 
-  <!-- Stats (Creatures) -->
-  @if (isCreature()) {
-    <div class="card-stats">
-      <div class="stat-badge atk">
-        <span class="stat-icon">⚔️</span>
-        <span class="stat-value">{{ card().attack }}</span>
-      </div>
-      <div class="stat-badge hp">
-        <span class="stat-icon">❤️</span>
-        <span class="stat-value">{{ card().health }}</span>
-      </div>
-    </div>
+  <!-- Flavor text -->
+  @if (card().flavorText) {
+    <div class="card-fluff">{{ card().flavorText }}</div>
   }
 
   <!-- Type indicator -->
-  <div class="card-type">{{ isCreature() ? 'Creature' : 'Spell' }}</div>
+  <div class="card-type">{{ isCreature() ? 'CREATURE' : 'SPELL' }}</div>
 </div>
