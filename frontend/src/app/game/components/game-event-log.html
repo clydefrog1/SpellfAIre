@@ -1,6 +1,9 @@
 <div class="event-log">
   @for (event of recentEvents(); track $index) {
     <div class="event-entry" @logEntry>
+      @if (event.turnNumber !== undefined) {
+        <span class="event-turn">T{{ event.turnNumber | number }}</span>
+      }
       <span class="event-icon">{{ getIcon(event.type) }}</span>
       <span class="event-msg">{{ event.message }}</span>
     </div>

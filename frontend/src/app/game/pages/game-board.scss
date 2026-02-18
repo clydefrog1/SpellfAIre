@@ -134,21 +134,14 @@
 // Background mirrors the old turn-instructions tint (cyan)
 
 .board-divider {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: var(--sf-space-xs);
+  column-gap: var(--sf-space-xs);
   padding: var(--sf-space-xs) var(--sf-space-md);
   background: rgba(142, 201, 217, 0.08);
   border-top: 1px solid rgba(142, 201, 217, 0.2);
   border-bottom: 1px solid rgba(142, 201, 217, 0.2);
-  flex-shrink: 0;
-}
-
-// Far-left: cancel (only during targeting modes)
-.divider-left {
-  display: flex;
-  align-items: center;
-  gap: var(--sf-space-xs);
   flex-shrink: 0;
 }
 
@@ -157,9 +150,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--sf-space-xs);
-  flex: 1;
+  // Keep the turn indicator/meta fixed in the center by reserving
+  // stable left/right "slots" even when the Attack button is hidden.
+  gap: var(--sf-space-md);
   min-width: 0;
+  grid-column: 2;
+  justify-self: center;
 }
 
 .divider-action-left,
@@ -167,6 +163,22 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
+}
+
+// Fixed-width side slots so the center content doesn't shift when
+// the left action (Attack) appears/disappears.
+.divider-action-left,
+.divider-action-right {
+  width: clamp(140px, 18vw, 220px);
+}
+
+.divider-action-left {
+  gap: var(--sf-space-sm);
+  justify-content: flex-start;
+}
+
+.divider-action-right {
+  justify-content: flex-end;
 }
 
 .turn-info {
@@ -189,7 +201,8 @@
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  margin-left: auto;
+  grid-column: 3;
+  justify-self: end;
 }
 
 .turn-indicator {
@@ -240,10 +253,12 @@
   align-items: flex-end;
   justify-content: center;
   gap: 0;
-  padding: var(--sf-space-xs) var(--sf-space-sm);
+  padding: var(--sf-space-xs) var(--sf-space-sm) var(--sf-space-sm);
   overflow-x: auto;
   overflow-y: visible;
-  flex-shrink: 0;
+  // Let the hand row expand to fill remaining space so the event bar
+  // can sit directly at the bottom of the viewport.
+  flex: 1 1 auto;
   background: linear-gradient(0deg,
     rgba(24, 32, 36, 0.5) 0%,
     transparent 100%
@@ -309,6 +324,22 @@
   flex-shrink: 0;
   border-left: 1px solid rgba(255, 255, 255, 0.07);
   border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+// ── Event bar (under hand row) ──
+
+.event-bar {
+  display: flex;
+  align-items: center;
+  padding: var(--sf-space-sm) var(--sf-space-md);
+  background: rgba(142, 201, 217, 0.08);
+  border-top: 1px solid rgba(142, 201, 217, 0.2);
+  border-bottom: 1px solid rgba(142, 201, 217, 0.2);
+  flex-shrink: 0;
+  min-width: 0;
+  overflow: hidden;
+  min-height: 30px;
+  box-sizing: border-box;
 }
 
 // ── Action buttons (in divider) ──
@@ -459,16 +490,6 @@
 @keyframes hintPulse {
   0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }
-}
-
-// ── Event log positioning ──
-
-app-game-event-log {
-  position: fixed;
-  top: var(--sf-space-sm);
-  right: var(--sf-space-sm);
-  z-index: 10;
-  pointer-events: none;
 }
 
 // ── Responsive ──

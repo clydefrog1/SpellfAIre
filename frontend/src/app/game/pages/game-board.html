@@ -36,16 +36,20 @@
   <!-- Center Divider (consolidated action bar) -->
   <div class="board-divider">
 
-    <!-- Far left: cancel (only during targeting) -->
-    <div class="divider-left">
-      @if (targetMode() !== 'none') {
-        <button class="sf-button cancel-btn divider-btn" type="button" (click)="cancelSelection()">✕ Cancel</button>
-      }
-    </div>
-
     <!-- Center cluster: [Attack] [Turn Info] [End Turn] -->
     <div class="divider-middle">
       <div class="divider-action-left">
+        @if (targetMode() !== 'none') {
+          <button class="sf-button cancel-btn divider-btn" type="button" (click)="cancelSelection()">✕ Cancel</button>
+        }
+        @if (targetMode() === 'spell' && selectedHandCardId()) {
+          <button
+            class="sf-button attack-btn divider-btn"
+            type="button"
+            (click)="executeSpellCast()"
+            [disabled]="loading() || !selectedTargetId()"
+          >✨ Cast Spell</button>
+        }
         @if (targetMode() === 'attack' && selectedAttackerId()) {
           <button
             class="sf-button attack-btn divider-btn"
@@ -62,8 +66,13 @@
           <div class="targeting-message">
             <span class="target-icon">✨</span>
             <div class="target-text">
-              <strong>Spell Targeting</strong>
-              <small>Click a creature or hero to cast your spell</small>
+              @if (selectedTargetId()) {
+                <strong>Target Selected!</strong>
+                <small>Click Cast Spell to execute, or Cancel</small>
+              } @else {
+                <strong>Spell Targeting</strong>
+                <small>Click a creature or hero to select a target</small>
+              }
             </div>
           </div>
         } @else if (targetMode() === 'attack') {
@@ -138,6 +147,7 @@
         [card]="getCard(creature.cardId)"
         side="player"
         [selected]="selectedAttackerId() === creature.instanceId"
+        [highlighted]="targetMode() === 'spell' && selectedTargetId() === creature.instanceId"
         [selectable]="isMyTurn() && creature.canAttack && !creature.hasAttackedThisTurn"
         (creatureClick)="onMyCreatureClick(creature)"
       />
@@ -207,10 +217,12 @@
     </div>
   </section>
 
+  <!-- Event Bar (under hand row) -->
+  <div class="event-bar">
+    <app-game-event-log [events]="events()" />
+  </div>
+
   <!-- Event Log -->
-  <app-game-event-log [events]="events()" />
-
-
   <!-- Game Over Overlay -->
   @if (isGameOver()) {
     <app-game-over-overlay

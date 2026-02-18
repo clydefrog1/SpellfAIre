@@ -207,6 +207,11 @@ export class GameService {
 
   private applyResponse(resp: GameActionResponse): void {
     this._game.set(resp.game);
-    this._events.update(prev => [...prev, ...resp.events]);
+    const turnNumber = resp.game.turnNumber;
+    const stampedEvents: GameEvent[] = resp.events.map(e => ({
+      ...e,
+      turnNumber,
+    }));
+    this._events.update(prev => [...prev, ...stampedEvents]);
   }
 }

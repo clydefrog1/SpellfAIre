@@ -10,7 +10,6 @@ import {
 import { GameCard } from '../components/game-card';
 import { BattlefieldCreature } from '../components/battlefield-creature';
 import { HeroPortrait } from '../components/hero-portrait';
-import { ManaBar } from '../components/mana-bar';
 import { GameEventLog } from '../components/game-event-log';
 import { GameOverOverlay } from '../components/game-over-overlay';
 import {
@@ -26,7 +25,6 @@ import {
     GameCard,
     BattlefieldCreature,
     HeroPortrait,
-    ManaBar,
     GameEventLog,
     GameOverOverlay,
   ],
@@ -115,6 +113,7 @@ export class GameBoard implements OnInit {
       this.selectedHandCardId.set(card.id);
       this.targetMode.set('spell');
       this.selectedAttackerId.set(null);
+      this.selectedTargetId.set(null);
       return;
     }
 
@@ -138,10 +137,7 @@ export class GameBoard implements OnInit {
 
     // If we're targeting for a spell on a friendly creature
     if (this.targetMode() === 'spell') {
-      const cardId = this.selectedHandCardId();
-      if (cardId) {
-        this.playCard(cardId, creature.instanceId);
-      }
+      this.selectedTargetId.set(creature.instanceId);
       return;
     }
 
@@ -158,10 +154,7 @@ export class GameBoard implements OnInit {
     if (!this.isMyTurn() || this.loading()) return;
 
     if (this.targetMode() === 'spell') {
-      const cardId = this.selectedHandCardId();
-      if (cardId) {
-        this.playCard(cardId, creature.instanceId);
-      }
+      this.selectedTargetId.set(creature.instanceId);
       return;
     }
 
@@ -175,10 +168,7 @@ export class GameBoard implements OnInit {
     if (!this.isMyTurn() || this.loading()) return;
 
     if (this.targetMode() === 'spell') {
-      const cardId = this.selectedHandCardId();
-      if (cardId) {
-        this.playCard(cardId, 'ENEMY_HERO');
-      }
+      this.selectedTargetId.set('ENEMY_HERO');
       return;
     }
 
@@ -190,10 +180,7 @@ export class GameBoard implements OnInit {
 
   onMyHeroClick(): void {
     if (this.targetMode() === 'spell') {
-      const cardId = this.selectedHandCardId();
-      if (cardId) {
-        this.playCard(cardId, 'FRIENDLY_HERO');
-      }
+      this.selectedTargetId.set('FRIENDLY_HERO');
     }
   }
 
@@ -215,6 +202,14 @@ export class GameBoard implements OnInit {
     if (!attackerId || !targetId) return;
     
     await this.doAttack(attackerId, targetId);
+  }
+
+  async executeSpellCast(): Promise<void> {
+    const cardId = this.selectedHandCardId();
+    const targetId = this.selectedTargetId();
+    if (!cardId || !targetId) return;
+
+    await this.playCard(cardId, targetId);
   }
 
   // ── Actions ──

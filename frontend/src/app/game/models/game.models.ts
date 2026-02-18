@@ -96,6 +96,8 @@ export interface GameEvent {
   targetId: string | null;
   value: number;
   message: string;
+  /** UI-added metadata (not required from backend). */
+  turnNumber?: number;
 }
 
 export interface GameActionResponse {
