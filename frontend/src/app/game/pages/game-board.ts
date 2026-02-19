@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { GameService } from '../services/game.service';
@@ -36,6 +36,10 @@ export class GameBoard implements OnInit {
   private readonly gameService = inject(GameService);
   private readonly router = inject(Router);
 
+  private lastProcessedEventIndex = 0;
+  private fxToken = 0;
+  private currentActorUserId: string | null = null;
+
   readonly game = this.gameService.game;
   readonly myState = this.gameService.myState;
   readonly opponentState = this.gameService.opponentState;
@@ -45,12 +49,61 @@ export class GameBoard implements OnInit {
   readonly loading = this.gameService.loading;
   readonly events = this.gameService.events;
 
+  readonly myUserId = computed(() => this.myState()?.userId ?? null);
+  readonly opponentUserId = computed(() => this.opponentState()?.userId ?? null);
+
+  // ── Combat FX (event-driven, transient UI state) ──
+
+  readonly attackAnim = signal<
+    { attackerId: string; targetId: string; token: number } | null
+  >(null);
+
+  readonly hitFlashByTarget = signal<
+    Record<string, { kind: 'damage' | 'heal'; token: number }>
+  >({});
+
+  readonly floatFxByTarget = signal<
+    Record<string, { kind: 'damage' | 'heal'; value: number; token: number }>
+  >({});
+
+  readonly spellImpactByTarget = signal<
+    Record<string, { kind: 'benefit' | 'harm'; token: number }>
+  >({});
+
   // Selection state
   readonly selectedHandCardId = signal<string | null>(null);
   readonly selectedAttackerId = signal<string | null>(null);
   readonly selectedTargetId = signal<string | null>(null);
   readonly targetMode = signal<'none' | 'spell' | 'attack'>('none');
   readonly showTutorialHint = signal(true);
+
+  // Guard restriction (UI enforcement)
+  readonly opponentGuardCreatures = computed(() => {
+    const battlefield = this.opponentState()?.battlefield ?? [];
+    return battlefield.filter(c => c.keywords?.includes('GUARD'));
+  });
+
+  readonly disableEnemyHeroAttackTarget = computed(() => {
+    const isAttackTargeting =
+      this.targetMode() === 'attack' && this.selectedAttackerId() !== null;
+    return isAttackTargeting && this.opponentGuardCreatures().length > 0;
+  });
+
+  readonly enemyHeroGuardMessage = computed<string | null>(() => {
+    if (!this.disableEnemyHeroAttackTarget()) return null;
+
+    const guards = this.opponentGuardCreatures();
+    if (guards.length === 0) return null;
+
+    const guardNames = guards
+      .map(c => this.getCard(c.cardId)?.name)
+      .filter((n): n is string => !!n);
+
+    const suffix = guardNames.length > 0 ? guardNames.join(', ') : 'Guard creatures';
+    return `Guarded by: ${suffix}`;
+  });
+
+  readonly enemyHeroGuardHintToken = signal(0);
   
   // Ready to attack flag
   readonly readyToAttack = computed(() => {
@@ -103,6 +156,153 @@ export class GameBoard implements OnInit {
     this.showTutorialHint.set(!seen);
   }
 
+  readonly selectedSpellCard = computed<CardResponse | null>(() => {
+    if (this.targetMode() !== 'spell') return null;
+    const cardId = this.selectedHandCardId();
+    if (!cardId) return null;
+    const card = this.getCard(cardId);
+    return card?.cardType === 'SPELL' ? card : null;
+  });
+
+  /** Prevent self-targeting when selecting a damage spell. */
+  readonly spellDisallowsFriendlyTargets = computed(() => {
+    const card = this.selectedSpellCard();
+    if (!card) return false;
+    return this.isDamageSpell(card);
+  });
+
+  private readonly combatFxEffect = effect(() => {
+    const allEvents = this.events();
+
+    if (allEvents.length < this.lastProcessedEventIndex) {
+      this.lastProcessedEventIndex = 0;
+    }
+
+    const newEvents = allEvents.slice(this.lastProcessedEventIndex);
+    this.lastProcessedEventIndex = allEvents.length;
+
+    let delayMs = 0;
+
+    let inSpellResolution = false;
+    let spellCastKind: 'benefit' | 'harm' = 'benefit';
+
+    for (const event of newEvents) {
+      if (event.type === 'TURN_START' && event.sourceId) {
+        this.currentActorUserId = event.sourceId;
+      }
+
+      if (event.type === 'CARD_PLAYED' && event.sourceId) {
+        const card = this.getCard(event.sourceId);
+        inSpellResolution = card?.cardType === 'SPELL';
+
+        if (inSpellResolution && card) {
+          spellCastKind = this.classifySpellCastKind(card);
+
+          const casterId = this.currentActorUserId ?? this.myUserId() ?? this.opponentUserId();
+          if (casterId) {
+            this.scheduleSpellImpactFx(casterId, spellCastKind, delayMs);
+          }
+        }
+      }
+
+      this.scheduleCombatFxForEvent(event, delayMs);
+
+      if (inSpellResolution) {
+        this.scheduleSpellImpactFromResolutionEvent(event, delayMs, spellCastKind);
+      }
+
+      const shouldStagger =
+        event.type === 'ATTACK' ||
+        event.type === 'DAMAGE' ||
+        event.type === 'HEAL' ||
+        (inSpellResolution &&
+          (event.type === 'BUFF' ||
+            event.type === 'FREEZE' ||
+            event.type === 'DEATH' ||
+            event.type === 'SUMMON'));
+
+      if (shouldStagger) delayMs += 280;
+    }
+  });
+
+  private classifySpellCastKind(card: CardResponse): 'benefit' | 'harm' {
+    const text = card.rulesText?.toLowerCase() ?? '';
+
+    if (text.includes('damage') || text.includes('destroy') || text.includes('freeze')) {
+      return 'harm';
+    }
+
+    if (text.includes('heal') || text.includes('summon') || text.includes('give')) {
+      return 'benefit';
+    }
+
+    return 'benefit';
+  }
+
+  private scheduleSpellImpactFromResolutionEvent(
+    event: GameEvent,
+    delayMs: number,
+    defaultKind: 'benefit' | 'harm'
+  ): void {
+    if (event.type === 'DAMAGE' && event.targetId) {
+      this.scheduleSpellImpactFx(event.targetId, 'harm', delayMs);
+      return;
+    }
+
+    if (event.type === 'HEAL' && event.targetId) {
+      this.scheduleSpellImpactFx(event.targetId, 'benefit', delayMs);
+      return;
+    }
+
+    if (event.type === 'FREEZE' && event.targetId) {
+      this.scheduleSpellImpactFx(event.targetId, 'harm', delayMs);
+      return;
+    }
+
+    if (event.type === 'BUFF' && event.targetId) {
+      const kind: 'benefit' | 'harm' = event.value < 0 ? 'harm' : 'benefit';
+      this.scheduleSpellImpactFx(event.targetId, kind, delayMs);
+      return;
+    }
+
+    if (event.type === 'DEATH' && event.sourceId) {
+      this.scheduleSpellImpactFx(event.sourceId, 'harm', delayMs);
+      return;
+    }
+
+    if (event.type === 'SUMMON' && event.sourceId) {
+      // Some token summons emit a non-unique placeholder id ('token'); avoid pulsing the wrong creature.
+      if (event.sourceId !== 'token') {
+        this.scheduleSpellImpactFx(event.sourceId, defaultKind, delayMs);
+      }
+    }
+  }
+
+  private scheduleSpellImpactFx(
+    targetId: string,
+    kind: 'benefit' | 'harm',
+    delayMs: number
+  ): void {
+    const token = ++this.fxToken;
+    const durationMs = 1560;
+
+    window.setTimeout(() => {
+      this.spellImpactByTarget.update(map => ({
+        ...map,
+        [targetId]: { kind, token },
+      }));
+
+      window.setTimeout(() => {
+        this.spellImpactByTarget.update(map => {
+          const current = map[targetId];
+          if (!current || current.token !== token) return map;
+          const { [targetId]: _, ...rest } = map;
+          return rest;
+        });
+      }, durationMs);
+    }, delayMs);
+  }
+
   // ── Hand interaction ──
 
   onHandCardClick(card: CardResponse): void {
@@ -137,6 +337,7 @@ export class GameBoard implements OnInit {
 
     // If we're targeting for a spell on a friendly creature
     if (this.targetMode() === 'spell') {
+      if (this.spellDisallowsFriendlyTargets()) return;
       this.selectedTargetId.set(creature.instanceId);
       return;
     }
@@ -173,15 +374,28 @@ export class GameBoard implements OnInit {
     }
 
     if (this.targetMode() === 'attack') {
+      if (this.disableEnemyHeroAttackTarget()) return;
       // Set the target, don't attack immediately
       this.selectedTargetId.set('ENEMY_HERO');
     }
   }
 
+  onEnemyHeroDisabledClick(): void {
+    if (!this.disableEnemyHeroAttackTarget()) return;
+    this.enemyHeroGuardHintToken.update(v => v + 1);
+  }
+
   onMyHeroClick(): void {
     if (this.targetMode() === 'spell') {
+      if (this.spellDisallowsFriendlyTargets()) return;
       this.selectedTargetId.set('FRIENDLY_HERO');
     }
+  }
+
+  private isDamageSpell(card: CardResponse): boolean {
+    if (card.cardType !== 'SPELL') return false;
+    const text = card.rulesText?.toLowerCase() ?? '';
+    return text.includes('damage') && (text.includes('deal') || text.includes('takes'));
   }
 
   cancelSelection(): void {
@@ -222,6 +436,120 @@ export class GameBoard implements OnInit {
   private async doAttack(attackerInstanceId: string, targetId: string): Promise<void> {
     this.cancelSelection();
     await this.gameService.attack(attackerInstanceId, targetId);
+  }
+
+  private scheduleCombatFxForEvent(event: GameEvent, delayMs: number): void {
+    if (event.type === 'ATTACK') {
+      if (!event.sourceId || !event.targetId) return;
+
+      const resolvedTargetId = this.resolveAttackTargetId(event.sourceId, event.targetId);
+      if (!resolvedTargetId) return;
+
+      const token = ++this.fxToken;
+      window.setTimeout(() => {
+        this.attackAnim.set({ attackerId: event.sourceId!, targetId: resolvedTargetId, token });
+
+        window.setTimeout(() => {
+          const current = this.attackAnim();
+          if (current?.token === token) {
+            this.attackAnim.set(null);
+          }
+        }, 640);
+      }, delayMs);
+      return;
+    }
+
+    if (event.type === 'DAMAGE' || event.type === 'HEAL') {
+      if (!event.targetId) return;
+
+      const value = Math.abs(event.value ?? 0);
+      if (value <= 0) return;
+
+      const kind: 'damage' | 'heal' = event.type === 'DAMAGE' ? 'damage' : 'heal';
+      const token = ++this.fxToken;
+      const targetId = event.targetId;
+
+      window.setTimeout(() => {
+        this.hitFlashByTarget.update(map => ({
+          ...map,
+          [targetId]: { kind, token },
+        }));
+
+        this.floatFxByTarget.update(map => ({
+          ...map,
+          [targetId]: { kind, value, token },
+        }));
+
+        window.setTimeout(() => {
+          this.hitFlashByTarget.update(map => {
+            const current = map[targetId];
+            if (!current || current.token !== token) return map;
+            const { [targetId]: _, ...rest } = map;
+            return rest;
+          });
+        }, 900);
+
+        window.setTimeout(() => {
+          this.floatFxByTarget.update(map => {
+            const current = map[targetId];
+            if (!current || current.token !== token) return map;
+            const { [targetId]: _, ...rest } = map;
+            return rest;
+          });
+        }, 1800);
+      }, delayMs);
+    }
+  }
+
+  private resolveAttackTargetId(attackerInstanceId: string, targetId: string): string | null {
+    if (targetId !== 'ENEMY_HERO' && targetId !== 'FRIENDLY_HERO') {
+      return targetId;
+    }
+
+    const attackerSide = this.getCreatureSide(attackerInstanceId);
+    if (!attackerSide) return null;
+
+    const myId = this.myUserId();
+    const oppId = this.opponentUserId();
+    if (!myId || !oppId) return null;
+
+    if (targetId === 'ENEMY_HERO') {
+      return attackerSide === 'player' ? oppId : myId;
+    }
+
+    return attackerSide === 'player' ? myId : oppId;
+  }
+
+  private getCreatureSide(instanceId: string): 'player' | 'opponent' | null {
+    const myBattlefield = this.myState()?.battlefield ?? [];
+    if (myBattlefield.some(c => c.instanceId === instanceId)) return 'player';
+
+    const opponentBattlefield = this.opponentState()?.battlefield ?? [];
+    if (opponentBattlefield.some(c => c.instanceId === instanceId)) return 'opponent';
+
+    return null;
+  }
+
+  getAttackSourceToken(id: string): number | null {
+    const anim = this.attackAnim();
+    return anim?.attackerId === id ? anim.token : null;
+  }
+
+  getAttackTargetToken(id: string): number | null {
+    const anim = this.attackAnim();
+    return anim?.targetId === id ? anim.token : null;
+  }
+
+  getHitFx(id: string): { kind: 'damage' | 'heal'; token: number } | null {
+    return this.hitFlashByTarget()[id] ?? null;
+  }
+
+  getFloatFx(id: string): { kind: 'damage' | 'heal'; value: number; token: number } | null {
+    return this.floatFxByTarget()[id] ?? null;
+  }
+
+  getSpellFx(id: string): { kind: 'benefit' | 'harm'; token: number } | null {
+    return this.spellImpactByTarget()[id] ?? null;
   }
 
   async endTurn(): Promise<void> {

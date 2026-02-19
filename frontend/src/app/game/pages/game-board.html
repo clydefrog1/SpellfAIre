@@ -3,16 +3,31 @@
 
   <!-- Enemy Hero (top of screen) -->
   <div class="top-hero-bar">
-    <app-hero-portrait
-      [health]="opponentState()?.heroHealth ?? 0"
-      [maxHealth]="25"
-      side="opponent"
-      [highlighted]="selectedTargetId() === 'ENEMY_HERO'"
-      [currentMana]="opponentState()?.currentMana ?? 0"
-      [maxMana]="opponentState()?.maxMana ?? 0"
-      [deckCount]="opponentState()?.deck?.length ?? 0"
-      (heroClick)="onEnemyHeroClick()"
-    />
+    <div class="enemy-hero-stack">
+      <app-hero-portrait
+        [health]="opponentState()?.heroHealth ?? 0"
+        [maxHealth]="25"
+        side="opponent"
+        [highlighted]="selectedTargetId() === 'ENEMY_HERO'"
+        [disabled]="disableEnemyHeroAttackTarget()"
+        [attentionToken]="disableEnemyHeroAttackTarget() ? enemyHeroGuardHintToken() : null"
+        [attackTargetToken]="opponentUserId() ? getAttackTargetToken(opponentUserId()!) : null"
+        [hitFx]="opponentUserId() ? getHitFx(opponentUserId()!) : null"
+        [floatFx]="opponentUserId() ? getFloatFx(opponentUserId()!) : null"
+        [spellFx]="opponentUserId() ? getSpellFx(opponentUserId()!) : null"
+        [currentMana]="opponentState()?.currentMana ?? 0"
+        [maxMana]="opponentState()?.maxMana ?? 0"
+        [deckCount]="opponentState()?.deck?.length ?? 0"
+        (heroClick)="onEnemyHeroClick()"
+        (disabledClick)="onEnemyHeroDisabledClick()"
+      />
+
+      @if (enemyHeroGuardMessage()) {
+        <div class="enemy-hero-guard-message" role="status">
+          {{ enemyHeroGuardMessage() }}
+        </div>
+      }
+    </div>
   </div>
 
   <!-- Opponent Battlefield -->
@@ -25,6 +40,11 @@
         side="opponent"
         [selectable]="targetMode() !== 'none'"
         [highlighted]="selectedTargetId() === creature.instanceId"
+        [attackSourceToken]="getAttackSourceToken(creature.instanceId)"
+        [attackTargetToken]="getAttackTargetToken(creature.instanceId)"
+        [hitFx]="getHitFx(creature.instanceId)"
+        [floatFx]="getFloatFx(creature.instanceId)"
+        [spellFx]="getSpellFx(creature.instanceId)"
         (creatureClick)="onEnemyCreatureClick(creature)"
       />
     }
@@ -71,7 +91,11 @@
                 <small>Click Cast Spell to execute, or Cancel</small>
               } @else {
                 <strong>Spell Targeting</strong>
-                <small>Click a creature or hero to select a target</small>
+                @if (spellDisallowsFriendlyTargets()) {
+                  <small>Click an enemy creature or hero to select a target</small>
+                } @else {
+                  <small>Click a creature or hero to select a target</small>
+                }
               }
             </div>
           </div>
@@ -149,6 +173,11 @@
         [selected]="selectedAttackerId() === creature.instanceId"
         [highlighted]="targetMode() === 'spell' && selectedTargetId() === creature.instanceId"
         [selectable]="isMyTurn() && creature.canAttack && !creature.hasAttackedThisTurn"
+        [attackSourceToken]="getAttackSourceToken(creature.instanceId)"
+        [attackTargetToken]="getAttackTargetToken(creature.instanceId)"
+        [hitFx]="getHitFx(creature.instanceId)"
+        [floatFx]="getFloatFx(creature.instanceId)"
+        [spellFx]="getSpellFx(creature.instanceId)"
         (creatureClick)="onMyCreatureClick(creature)"
       />
     }
@@ -187,7 +216,11 @@
         [health]="myState()?.heroHealth ?? 0"
         [maxHealth]="25"
         side="player"
-        [highlighted]="targetMode() === 'spell'"
+        [highlighted]="targetMode() === 'spell' && !spellDisallowsFriendlyTargets()"
+        [attackTargetToken]="myUserId() ? getAttackTargetToken(myUserId()!) : null"
+        [hitFx]="myUserId() ? getHitFx(myUserId()!) : null"
+        [floatFx]="myUserId() ? getFloatFx(myUserId()!) : null"
+        [spellFx]="myUserId() ? getSpellFx(myUserId()!) : null"
         [currentMana]="myState()?.currentMana ?? 0"
         [maxMana]="myState()?.maxMana ?? 0"
         [deckCount]="myState()?.deck?.length ?? 0"

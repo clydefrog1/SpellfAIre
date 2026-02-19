@@ -57,6 +57,19 @@
       0 6px 22px rgba(0, 0, 0, 0.6);
   }
 
+  &.disabled {
+    cursor: default;
+    opacity: 0.75;
+
+    &:hover {
+      border-color: rgba(185, 145, 68, 0.55);
+      box-shadow:
+        0 0 0 1px rgba(100, 70, 20, 0.3),
+        inset 0 1px 0 rgba(255, 220, 130, 0.12),
+        0 4px 18px rgba(0, 0, 0, 0.55);
+    }
+  }
+
   &.player {
     .hero-art-inner {
       background: linear-gradient(145deg,
@@ -92,6 +105,223 @@
       box-shadow: 0 0 24px rgba(217, 163, 90, 0.55);
     }
   }
+
+  &.attack-targeted.attack-targeted-even {
+    animation: heroTargetShakeEven 480ms ease-out;
+  }
+
+  &.attack-targeted.attack-targeted-odd {
+    animation: heroTargetShakeOdd 480ms ease-out;
+  }
+
+  &.hit-damage.hit-even {
+    animation: heroHitDamageEven 840ms ease-out;
+  }
+
+  &.hit-damage.hit-odd {
+    animation: heroHitDamageOdd 840ms ease-out;
+  }
+
+  &.hit-heal.hit-even {
+    animation: heroHitHealEven 1040ms ease-out;
+  }
+
+  &.hit-heal.hit-odd {
+    animation: heroHitHealOdd 1040ms ease-out;
+  }
+
+  &.attention-even {
+    animation: heroBlockedPulseEven 640ms ease-out;
+  }
+
+  &.attention-odd {
+    animation: heroBlockedPulseOdd 640ms ease-out;
+  }
+}
+
+.combat-float {
+  position: absolute;
+  top: 44px;
+  right: 10px;
+  z-index: 20;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+
+  &.damage {
+    color: var(--sf-danger);
+  }
+
+  &.heal {
+    color: var(--sf-success);
+  }
+
+  &.float-even {
+    animation: heroFloatEven 1800ms ease-out;
+  }
+
+  &.float-odd {
+    animation: heroFloatOdd 1800ms ease-out;
+  }
+}
+
+.spell-impact {
+  position: absolute;
+  inset: 2px;
+  border-radius: var(--sf-radius-lg);
+  pointer-events: none;
+  z-index: 6;
+
+  &.benefit {
+    animation-name: heroSpellBenefit;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+  }
+
+  &.harm {
+    animation-name: heroSpellHarm;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+  }
+
+  &.benefit.spell-even {
+    animation-duration: 1560ms;
+  }
+
+  &.benefit.spell-odd {
+    // Slightly different duration forces the animation to restart when the token parity flips.
+    animation-duration: 1559ms;
+  }
+
+  &.harm.spell-even {
+    animation-duration: 1560ms;
+  }
+
+  &.harm.spell-odd {
+    animation-duration: 1559ms;
+  }
+}
+
+@keyframes heroTargetShakeEven {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  55% { transform: translateX(3px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes heroTargetShakeOdd {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(3px); }
+  55% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes heroHitDamageEven {
+  0% { filter: brightness(1) saturate(1); }
+  20% { filter: brightness(1.7) saturate(0.7); }
+  55% { filter: brightness(0.75) saturate(1.4); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+@keyframes heroHitDamageOdd {
+  0% { filter: brightness(1) saturate(1); }
+  20% { filter: brightness(1.7) saturate(0.7); }
+  55% { filter: brightness(0.75) saturate(1.4); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+@keyframes heroHitHealEven {
+  0% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+  30% { box-shadow: 0 0 26px rgba(114, 184, 148, 0.55), 0 4px 18px rgba(0, 0, 0, 0.55); }
+  100% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+}
+
+@keyframes heroHitHealOdd {
+  0% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+  30% { box-shadow: 0 0 26px rgba(114, 184, 148, 0.55), 0 4px 18px rgba(0, 0, 0, 0.55); }
+  100% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+}
+
+@keyframes heroFloatEven {
+  0% { opacity: 0; transform: translateY(6px) scale(0.8); }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { opacity: 0; transform: translateY(-18px) scale(0.95); }
+}
+
+@keyframes heroFloatOdd {
+  0% { opacity: 0; transform: translateY(6px) scale(0.8); }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  70% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { opacity: 0; transform: translateY(-18px) scale(0.95); }
+}
+
+@keyframes heroSpellBenefit {
+  0% {
+    opacity: 0;
+    box-shadow: none;
+    filter: none;
+    transform: scale(0.99);
+  }
+  25% {
+    opacity: 0.9;
+    box-shadow: 0 0 0 2px var(--sf-success), 0 0 26px var(--sf-success);
+    filter: drop-shadow(0 0 22px var(--sf-success));
+    transform: scale(1.02);
+  }
+  45% {
+    opacity: 0.88;
+    box-shadow: 0 0 0 2px var(--sf-success), 0 0 26px var(--sf-success);
+    filter: drop-shadow(0 0 22px var(--sf-success));
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: none;
+    filter: none;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroSpellHarm {
+  0% {
+    opacity: 0;
+    box-shadow: none;
+    filter: none;
+    transform: scale(0.99);
+  }
+  25% {
+    opacity: 0.9;
+    box-shadow: 0 0 0 2px var(--sf-danger), 0 0 28px var(--sf-danger);
+    filter: drop-shadow(0 0 22px var(--sf-danger));
+    transform: scale(1.02);
+  }
+  45% {
+    opacity: 0.88;
+    box-shadow: 0 0 0 2px var(--sf-danger), 0 0 28px var(--sf-danger);
+    filter: drop-shadow(0 0 22px var(--sf-danger));
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    box-shadow: none;
+    filter: none;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroBlockedPulseEven {
+  0% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+  40% { box-shadow: 0 0 22px rgba(217, 163, 90, 0.45), 0 4px 18px rgba(0, 0, 0, 0.55); }
+  100% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+}
+
+@keyframes heroBlockedPulseOdd {
+  0% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
+  40% { box-shadow: 0 0 22px rgba(217, 163, 90, 0.45), 0 4px 18px rgba(0, 0, 0, 0.55); }
+  100% { box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55); }
 }
 
 @keyframes criticalPulse {

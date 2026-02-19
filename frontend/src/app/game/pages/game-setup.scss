@@ -1,5 +1,11 @@
 .game-setup {
-  padding-bottom: var(--sf-space-3xl);
+  margin: var(--sf-space-lg) auto;
+  padding-bottom: 0;
+  min-height: calc(100dvh - (2 * var(--sf-space-lg)));
+  display: flex;
+  flex-direction: column;
+  // Allow the internal scroll region to shrink in flex layouts
+  min-width: 0;
 }
 
 .sf-back-link {
@@ -21,11 +27,23 @@
 
 .sf-subtitle {
   color: var(--sf-text-muted);
-  margin-bottom: var(--sf-space-xl);
+  margin-bottom: var(--sf-space-lg);
+}
+
+.setup-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.setup-actions {
+  flex: 0 0 auto;
+  padding-top: var(--sf-space-md);
 }
 
 .picker-section {
-  margin-bottom: var(--sf-space-2xl);
+  margin-bottom: var(--sf-space-xl);
 }
 
 .picker-label {
@@ -45,7 +63,7 @@
   flex-direction: column;
   align-items: center;
   gap: var(--sf-space-xs);
-  padding: var(--sf-space-lg) var(--sf-space-md);
+  padding: var(--sf-space-md) var(--sf-space-md);
   text-align: center;
 
   font-family: inherit;
@@ -77,7 +95,7 @@
 }
 
 .picker-icon {
-  font-size: 32px;
+  font-size: 28px;
   line-height: 1;
 }
 
@@ -94,7 +112,6 @@
 
 .start-btn {
   width: 100%;
-  margin-top: var(--sf-space-lg);
   font-size: var(--sf-font-size-lg);
   padding: var(--sf-space-lg);
 }
@@ -102,5 +119,41 @@
 @media (max-width: 500px) {
   .picker-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 820px) {
+  .game-setup {
+    margin: var(--sf-space-md) auto;
+    min-height: calc(100dvh - (2 * var(--sf-space-md)));
+  }
+
+  .sf-back-link {
+    margin-bottom: var(--sf-space-md);
+  }
+
+  .sf-subtitle {
+    margin-bottom: var(--sf-space-md);
+  }
+
+  .picker-section {
+    margin-bottom: var(--sf-space-lg);
+  }
+
+  .picker-grid {
+    gap: var(--sf-space-sm);
+  }
+
+  .picker-card {
+    padding: var(--sf-space-sm) var(--sf-space-md);
+    gap: 2px;
+  }
+
+  .picker-icon {
+    font-size: 26px;
+  }
+
+  .picker-desc {
+    font-size: 11px;
   }
 }
