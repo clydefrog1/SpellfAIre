@@ -123,7 +123,19 @@ public class GameplayService {
 		// If AI goes first, execute AI turn
 		if (!playerFirst) {
 			events.addAll(executeAiTurn(game));
+			events.addAll(checkGameOver(game));
+
+			if (game.getGameStatus() == GameStatus.IN_PROGRESS && "AI".equals(game.getCurrentPlayerId())) {
+				game.setCurrentPlayerId(game.getPlayer1Id());
+				game.setTurnNumber(game.getTurnNumber() + 1);
+
+				GamePlayerState playerState = getPlayerState(game, game.getPlayer1Id());
+				events.addAll(processStartOfTurn(game, playerState));
+				events.addAll(checkGameOver(game));
+			}
 		}
+
+		events.addAll(checkGameOver(game));
 
 		game.setUpdatedAt(Instant.now());
 		game = gameRepository.save(game);
@@ -371,14 +383,18 @@ public class GameplayService {
 		// If AI's turn, execute full AI turn then switch back to player
 		if ("AI".equals(nextPlayerId)) {
 			events.addAll(executeAiTurn(game));
-			
-			// AI turn is complete, switch back to player
-			game.setCurrentPlayerId(game.getPlayer1Id());
-			game.setTurnNumber(game.getTurnNumber() + 1);
-			
-			// Start player's turn
-			GamePlayerState playerState = getPlayerState(game, game.getPlayer1Id());
-			events.addAll(processStartOfTurn(game, playerState));
+			events.addAll(checkGameOver(game));
+
+			if (game.getGameStatus() == GameStatus.IN_PROGRESS && "AI".equals(game.getCurrentPlayerId())) {
+				// AI turn is complete, switch back to player
+				game.setCurrentPlayerId(game.getPlayer1Id());
+				game.setTurnNumber(game.getTurnNumber() + 1);
+
+				// Start player's turn
+				GamePlayerState playerState = getPlayerState(game, game.getPlayer1Id());
+				events.addAll(processStartOfTurn(game, playerState));
+				events.addAll(checkGameOver(game));
+			}
 		}
 
 		// Check game over
