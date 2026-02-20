@@ -17,6 +17,8 @@ export class GameCard {
   readonly insufficientMana = input(false);
   /** Compact layout variant (used for battlefield mini-cards). */
   readonly compact = input(false);
+  /** Larger layout variant (used for Card Library). */
+  readonly large = input(false);
   /** Hide the mana cost bubble (used for battlefield mini-cards). */
   readonly hideCost = input(false);
   /** Disable interactivity/ARIA for nested usages (battlefield wrapper handles input). */

@@ -2,6 +2,8 @@ export interface UserResponse {
   id: string;
   email: string;
   username: string;
+  avatarBase64?: string | null;
+  rating?: number;
 }
 
 export interface AuthResponse {
@@ -22,4 +24,11 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface UpdateProfileRequest {
+  username?: string;
+  currentPassword?: string;
+  newPassword?: string;
+  avatarBase64?: string | null;
 }

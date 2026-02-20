@@ -89,7 +89,8 @@ public class AuthController {
 		String userId = (String) authentication.getPrincipal();
 		User user = userRepository.findById(UUID.fromString(userId))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-		return new UserResponse(user.getId().toString(), user.getEmail(), user.getUsername());
+		return new UserResponse(user.getId().toString(), user.getEmail(), user.getUsername(),
+				user.getAvatarBase64(), user.getRating());
 	}
 
 	private static String getCookieValue(HttpServletRequest request, String name) {

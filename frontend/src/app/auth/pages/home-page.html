@@ -1,8 +1,8 @@
 <main class="sf-page sf-page-wide home-page">
   <h1 class="sf-title">SpellfAIre</h1>
 
-  <p class="home-welcome">
-    Welcome, spellbinder. Beyond these runes lies a battlefield of vows and firelight—
+  <p *ngIf="user() as u" class="home-welcome" >
+    Welcome, <strong>{{ u.username }}</strong>. Beyond these runes lies a battlefield of vows and firelight—
     choose your path, and let your deck speak in thunder.
   </p>
 
@@ -12,8 +12,11 @@
 
   <p *ngIf="user() as u">Logged in as <strong>{{ u.username }}</strong> ({{ u.email }})</p>
 
-  <div class="home-actions">
+  <nav class="home-actions" aria-label="Main menu">
     <button class="sf-button" type="button" (click)="playVsAi()">Play vs AI</button>
+    <button class="sf-button sf-button-secondary" type="button" (click)="goToProfile()">Profile Settings</button>
+    <button class="sf-button" type="button" disabled>Tutorial</button>
+    <button class="sf-button" type="button" (click)="goToLibrary()">Card Library</button>
     <button class="sf-button sf-button-secondary" type="button" (click)="logout()">Logout</button>
-  </div>
+  </nav>
 </main>

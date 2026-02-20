@@ -21,7 +21,7 @@ public class ImmersiveQuote {
 	@Column(columnDefinition = "BINARY(16)")
 	private UUID id;
 
-	@Column(columnDefinition = "TEXT", nullable = false, unique = true)
+	@Column(length = 512, nullable = false, unique = true)
 	private String text;
 
 	public ImmersiveQuote() {

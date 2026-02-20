@@ -7,9 +7,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.UUID;
+
 import com.spellfaire.spellfairebackend.auth.dto.AuthResponse;
 import com.spellfaire.spellfairebackend.auth.dto.LoginRequest;
 import com.spellfaire.spellfairebackend.auth.dto.RegisterRequest;
+import com.spellfaire.spellfairebackend.auth.dto.UpdateProfileRequest;
 import com.spellfaire.spellfairebackend.auth.dto.UserResponse;
 import com.spellfaire.spellfairebackend.auth.model.User;
 import com.spellfaire.spellfairebackend.auth.repo.UserRepository;
@@ -76,6 +79,30 @@ public class AuthService {
 		refreshTokenService.revokeIfPresent(rawRefreshToken);
 	}
 
+	public UserResponse updateProfile(UUID userId, UpdateProfileRequest request) {
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+		if (request.getUsername() != null && !request.getUsername().isBlank()) {
+			user.setUsername(request.getUsername().trim());
+		}
+
+		if (request.getNewPassword() != null && !request.getNewPassword().isBlank()) {
+			if (request.getCurrentPassword() == null
+					|| !passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Current password is incorrect");
+			}
+			user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+		}
+
+		if (request.getAvatarBase64() != null) {
+			user.setAvatarBase64(request.getAvatarBase64());
+		}
+
+		userRepository.save(user);
+		return toUserResponse(user);
+	}
+
 	private AuthResult issueTokens(User user) {
 		String accessToken = jwtService.createAccessToken(user);
 		RefreshTokenService.IssuedRefreshToken refresh = refreshTokenService.issueForUser(user);
@@ -83,7 +110,8 @@ public class AuthService {
 	}
 
 	private static UserResponse toUserResponse(User user) {
-		return new UserResponse(user.getId().toString(), user.getEmail(), user.getUsername());
+		return new UserResponse(user.getId().toString(), user.getEmail(), user.getUsername(),
+				user.getAvatarBase64(), user.getRating());
 	}
 
 	public record AuthResult(AuthResponse response, String refreshTokenValue) {

@@ -6,22 +6,39 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: var(--sf-space-xl);
+}
+
+.home-page .sf-title,
+.home-page p {
+  margin: 0;
 }
 
 .home-welcome {
-  margin-top: 0;
   color: var(--sf-text-muted);
 }
 
 .home-quote {
-  margin-top: var(--sf-space-lg);
   color: var(--sf-text-muted);
 }
 
 .home-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: var(--sf-space-md);
-  margin-top: var(--sf-space-lg);
+  width: 100%;
+
+  .sf-button {
+    width: min(320px, 100%);
+
+    &:disabled {
+      opacity: 0.7;
+      color: var(--sf-text-muted);
+    }
+  }
 }
 
 .sf-button-secondary {

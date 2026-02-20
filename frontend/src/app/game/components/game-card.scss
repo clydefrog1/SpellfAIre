@@ -110,6 +110,39 @@
   }
 }
 
+// Larger variant (Card Library)
+.game-card.large {
+  width: 160px;
+  height: 248px;
+  max-height: 248px;
+  padding: 8px;
+  padding-bottom: 14px;
+  gap: 8px;
+  margin-top: 12px;
+
+  .card-name {
+    font-size: 13px;
+  }
+
+  .card-rules {
+    font-size: 10.5px;
+    line-height: 1.25;
+  }
+
+  .card-fluff {
+    font-size: 9.5px;
+    line-height: 1.25;
+  }
+}
+
+.game-card.large .card-cost {
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  top: -10px;
+  left: -10px;
+}
+
 // Compact variant (battlefield mini-card)
 .game-card.compact {
   width: var(--sf-bf-card-width, 136px);

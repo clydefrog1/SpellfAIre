@@ -1,0 +1,146 @@
+<main class="sf-page sf-page-wide profile-page">
+  <h1 class="sf-title profile-title">Profile Settings</h1>
+
+  <form class="sf-card profile-card" [formGroup]="form" (ngSubmit)="submit()">
+    <section class="profile-left" aria-label="Profile">
+      <!-- Avatar -->
+      <div class="avatar-section">
+        <div class="avatar-container">
+          <img
+            *ngIf="avatarPreview() as src; else avatarFallback"
+            [src]="src"
+            alt="Avatar preview"
+            class="avatar-img"
+          />
+          <ng-template #avatarFallback>
+            <div class="avatar-fallback">
+              <span class="avatar-rune">⚔</span>
+            </div>
+          </ng-template>
+
+          <label class="avatar-overlay" for="avatar-input" title="Upload avatar">
+            <span class="avatar-overlay-icon">&#128247;</span>
+            <span class="avatar-overlay-text">Change</span>
+          </label>
+
+          <input
+            id="avatar-input"
+            class="avatar-file-input"
+            type="file"
+            accept="image/*"
+            (change)="onFileChange($event)"
+          />
+        </div>
+
+        <p class="sf-hint avatar-hint">Click the portrait to upload a new avatar</p>
+      </div>
+
+      <!-- Username -->
+      <div class="username-section">
+        <label class="sf-field">
+          <span class="sf-field-label">Username</span>
+          <input
+            class="sf-input"
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            placeholder="Enter new username"
+          />
+        </label>
+
+        <div
+          class="sf-field-error"
+          *ngIf="form.controls.username.touched && form.controls.username.invalid"
+        >
+          <div *ngIf="form.controls.username.errors?.['minlength']">Username must be at least 3 characters.</div>
+          <div *ngIf="form.controls.username.errors?.['maxlength']">Username must be at most 30 characters.</div>
+        </div>
+      </div>
+
+      <!-- Rating placeholder -->
+      <div class="rating-section">
+        <h2 class="section-heading">Rating</h2>
+
+        <div class="rating-card">
+          <span class="rating-icon">&#9876;</span>
+
+          <div class="rating-info">
+            <span class="rating-value">{{ (user()?.rating ?? 1000) | number: '1.0-0' }}</span>
+            <span class="rating-label">Global Rank</span>
+          </div>
+
+          <span class="rating-badge">Coming Soon</span>
+        </div>
+
+        <p class="sf-hint rating-hint">Ranked matchmaking will be introduced in a future update.</p>
+      </div>
+    </section>
+
+    <section class="profile-right" aria-label="Password">
+      <header class="password-header">
+        <h2 class="password-title">Password</h2>
+        <p class="sf-hint password-subtitle">To change it, enter your current password and a new one.</p>
+      </header>
+
+      <div class="password-fields">
+        <label class="sf-field">
+          <span class="sf-field-label">Current Password</span>
+          <input
+            class="sf-input"
+            type="password"
+            formControlName="currentPassword"
+            autocomplete="current-password"
+            placeholder="Required to set a new password"
+          />
+        </label>
+
+        <label class="sf-field">
+          <span class="sf-field-label">New Password</span>
+          <input
+            class="sf-input"
+            type="password"
+            formControlName="newPassword"
+            autocomplete="new-password"
+            placeholder="Min. 8 characters"
+          />
+        </label>
+
+        <div class="sf-field-error" *ngIf="form.controls.newPassword.touched && form.controls.newPassword.invalid">
+          <div *ngIf="form.controls.newPassword.errors?.['minlength']">Password must be at least 8 characters.</div>
+          <div *ngIf="form.controls.newPassword.errors?.['maxlength']">Password is too long.</div>
+        </div>
+
+        <label class="sf-field">
+          <span class="sf-field-label">Confirm New Password</span>
+          <input
+            class="sf-input"
+            type="password"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            placeholder="Repeat your new password"
+          />
+        </label>
+
+        <div class="sf-field-error" *ngIf="form.controls.confirmPassword.touched && form.errors?.['passwordsMismatch']">
+          Passwords do not match.
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-bottom" aria-label="Save and navigation">
+      <div class="profile-messages">
+        <p class="sf-error" *ngIf="errorMessage() as msg">{{ msg }}</p>
+        <p class="sf-success" *ngIf="successMessage() as msg">{{ msg }}</p>
+      </div>
+
+      <div class="profile-actions">
+        <button class="sf-button" type="submit" [disabled]="!canSubmit()">
+          {{ isSubmitting() ? 'Saving…' : 'Save Changes' }}
+        </button>
+        <button class="sf-button sf-button-secondary" type="button" (click)="goBack()">
+          Back to Home
+        </button>
+      </div>
+    </section>
+  </form>
+</main>

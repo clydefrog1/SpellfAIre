@@ -1,0 +1,14 @@
+@if (active()) {
+  <div class="sf-loader-overlay" role="presentation" aria-hidden="false">
+    <div
+      class="sf-loader-panel"
+      role="status"
+      aria-live="polite"
+      [attr.aria-label]="label()"
+      aria-busy="true"
+    >
+      <div class="sf-loader-rune" aria-hidden="true"></div>
+      <div class="sf-loader-text">{{ label() }}</div>
+    </div>
+  </div>
+}

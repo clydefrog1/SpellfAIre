@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { AuthService } from './auth/services/auth.service';
+import { LoadingService } from './shared/services/loading.service';
 
 @Component({
   selector: 'app-root',
@@ -11,9 +12,15 @@ import { AuthService } from './auth/services/auth.service';
 })
 export class App {
   private readonly auth = inject(AuthService);
+  private readonly loading = inject(LoadingService);
   protected readonly title = signal('spellfaire');
 
   async ngOnInit(): Promise<void> {
-    await this.auth.ensureInitialized();
+    this.loading.begin();
+    try {
+      await this.auth.ensureInitialized();
+    } finally {
+      this.loading.end();
+    }
   }
 }

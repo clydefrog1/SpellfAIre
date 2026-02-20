@@ -1,0 +1,152 @@
+<main class="sf-page sf-page-wide card-library">
+  <button class="sf-back-link" type="button" (click)="goBack()">← Back</button>
+
+  <header class="library-header">
+    <h1 class="sf-title">Card Library</h1>
+    <p class="sf-subtitle">All known cards, organized by faction and magic school.</p>
+
+    @if (!loading() && !error()) {
+      <p class="library-meta">{{ filteredCount() | number }} / {{ cards().length | number }} cards</p>
+    }
+  </header>
+
+  @if (loading()) {
+    <p class="library-state">Loading cards…</p>
+  } @else if (error()) {
+    <p class="sf-error">{{ error() }}</p>
+  } @else if (cards().length === 0) {
+    <p class="library-state">No cards available.</p>
+  } @else {
+    <section class="sf-card library-filters" aria-label="Library filters">
+      <label class="sf-field">
+        <span class="sf-field-label">Search by name</span>
+        <input
+          #searchInput
+          class="sf-input"
+          type="text"
+          placeholder="e.g. Ember"
+          [value]="searchQuery()"
+          (input)="setSearchQuery(searchInput.value)"
+        />
+      </label>
+
+      <label class="sf-field">
+        <span class="sf-field-label">Card type</span>
+        <select
+          #typeSelect
+          class="sf-input"
+          [value]="cardTypeFilter()"
+          (change)="setCardTypeFilter(typeSelect.value)"
+        >
+          <option value="BOTH">Both</option>
+          <option value="CREATURE">Creatures only</option>
+          <option value="SPELL">Magic cards only</option>
+        </select>
+      </label>
+
+      <label class="sf-field">
+        <span class="sf-field-label">Creature faction</span>
+        <select
+          #factionSelect
+          class="sf-input"
+          [disabled]="!showCreatures()"
+          [value]="creatureFactionFilter()"
+          (change)="setCreatureFactionFilter(factionSelect.value)"
+        >
+          <option value="ALL">All factions</option>
+          @for (f of factions; track f.id) {
+            <option [value]="f.id">{{ f.name }}</option>
+          }
+          <option value="NEUTRAL">Neutral</option>
+        </select>
+      </label>
+
+      <label class="sf-field">
+        <span class="sf-field-label">Magic school</span>
+        <select
+          #schoolSelect
+          class="sf-input"
+          [disabled]="!showSpells()"
+          [value]="spellSchoolFilter()"
+          (change)="setSpellSchoolFilter(schoolSelect.value)"
+        >
+          <option value="ALL">All schools</option>
+          @for (s of schools; track s.id) {
+            <option [value]="s.id">{{ s.name }}</option>
+          }
+          <option value="RAW">Raw</option>
+        </select>
+      </label>
+    </section>
+
+    @if (!hasMatches()) {
+      <p class="library-state">No cards match current filters.</p>
+    }
+
+    @if (showCreatures() && hasMatches()) {
+      <section class="library-section" aria-label="Creatures">
+        <h2 class="library-section-title">Creatures</h2>
+
+        <div class="library-groups">
+          @for (g of creatureGroups(); track g.id) {
+            <section class="sf-card group-panel" [style.--group-color]="g.color ?? null">
+              <div class="group-header">
+                <h3 class="group-title">{{ g.name }}</h3>
+                <span class="group-count">{{ g.cards.length | number }}</span>
+              </div>
+
+              @if (g.cards.length === 0) {
+                <p class="group-empty">No creatures.</p>
+              } @else {
+                <div class="card-grid" role="list">
+                  @for (card of g.cards; track trackByCardId($index, card)) {
+                    <div class="card-grid-item" role="listitem">
+                      <app-game-card
+                        [card]="card"
+                        [interactive]="false"
+                        [large]="true"
+                      />
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+        </div>
+      </section>
+    }
+
+    @if (showSpells() && hasMatches()) {
+      <section class="library-section" aria-label="Spells">
+        <h2 class="library-section-title">Spells</h2>
+
+        <div class="library-groups">
+          @for (g of spellGroups(); track g.id) {
+            <section class="sf-card group-panel" [style.--group-color]="g.color ?? null">
+              <div class="group-header">
+                <h3 class="group-title">{{ g.name }}</h3>
+                <span class="group-count">{{ g.cards.length | number }}</span>
+              </div>
+
+              @if (g.cards.length === 0) {
+                <p class="group-empty">No spells.</p>
+              } @else {
+                <div class="card-grid" role="list">
+                  @for (card of g.cards; track trackByCardId($index, card)) {
+                    <div class="card-grid-item" role="listitem">
+                      <app-game-card
+                        [card]="card"
+                        [interactive]="false"
+                        [large]="true"
+                      />
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+        </div>
+      </section>
+    }
+  }
+</main>

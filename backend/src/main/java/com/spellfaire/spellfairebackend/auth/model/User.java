@@ -29,6 +29,12 @@ public class User {
 
 	private Instant createdAt;
 
+	@Column(columnDefinition = "MEDIUMTEXT")
+	private String avatarBase64;
+
+	@Column(nullable = false)
+	private int rating = 1000;
+
 	public UUID getId() {
 		return id;
 	}
@@ -67,5 +73,21 @@ public class User {
 
 	public void setCreatedAt(Instant createdAt) {
 		this.createdAt = createdAt;
+	}
+
+	public String getAvatarBase64() {
+		return avatarBase64;
+	}
+
+	public void setAvatarBase64(String avatarBase64) {
+		this.avatarBase64 = avatarBase64;
+	}
+
+	public int getRating() {
+		return rating;
+	}
+
+	public void setRating(int rating) {
+		this.rating = rating;
 	}
 }

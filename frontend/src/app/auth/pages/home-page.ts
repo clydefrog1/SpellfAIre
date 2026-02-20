@@ -39,4 +39,12 @@ export class HomePage {
   playVsAi(): void {
     this.router.navigateByUrl('/game/setup');
   }
+
+  goToProfile(): void {
+    this.router.navigateByUrl('/profile');
+  }
+
+  goToLibrary(): void {
+    this.router.navigateByUrl('/library');
+  }
 }

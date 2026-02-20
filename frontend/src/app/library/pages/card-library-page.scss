@@ -1,0 +1,135 @@
+.card-library {
+  margin: 0 auto;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: var(--sf-space-lg);
+  padding-bottom: var(--sf-space-3xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sf-space-xl);
+}
+
+.sf-back-link {
+  display: inline-block;
+  margin-bottom: var(--sf-space-sm);
+  padding: var(--sf-space-xs) 0;
+  font-size: var(--sf-font-size-sm);
+  font-family: inherit;
+  color: var(--sf-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--sf-transition);
+
+  &:hover {
+    color: var(--sf-accent);
+  }
+}
+
+.library-header {
+  display: grid;
+  gap: var(--sf-space-sm);
+
+  .sf-title {
+    margin-bottom: 0;
+  }
+
+  .sf-subtitle {
+    margin: 0;
+    color: var(--sf-text-muted);
+  }
+}
+
+.library-meta {
+  margin: 0;
+  color: var(--sf-text-muted);
+  font-size: var(--sf-font-size-sm);
+}
+
+.library-filters {
+  padding: var(--sf-space-lg);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sf-space-md);
+}
+
+.library-state {
+  margin: 0;
+  color: var(--sf-text-muted);
+}
+
+.library-section {
+  display: grid;
+  gap: var(--sf-space-md);
+}
+
+.library-section-title {
+  font-size: var(--sf-font-size-lg);
+  color: var(--sf-text);
+}
+
+.library-groups {
+  display: grid;
+  gap: var(--sf-space-lg);
+}
+
+.group-panel {
+  padding: var(--sf-space-lg);
+  gap: var(--sf-space-md);
+  border-left: 3px solid
+    color-mix(in srgb, var(--group-color, var(--sf-border)) 65%, transparent);
+}
+
+.group-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sf-space-md);
+}
+
+.group-title {
+  margin: 0;
+  font-size: var(--sf-font-size-base);
+  letter-spacing: 0.2px;
+}
+
+.group-count {
+  color: var(--sf-text-muted);
+  font-size: var(--sf-font-size-sm);
+  white-space: nowrap;
+}
+
+.group-empty {
+  margin: 0;
+  color: var(--sf-text-muted);
+  font-size: var(--sf-font-size-sm);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--sf-space-lg);
+  align-items: start;
+}
+
+.card-grid-item {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 700px) {
+  .library-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: var(--sf-space-md);
+  }
+
+  .group-panel {
+    padding: var(--sf-space-md);
+  }
+}
