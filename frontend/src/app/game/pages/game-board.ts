@@ -50,6 +50,10 @@ export class GameBoard implements OnInit, OnDestroy {
   private static readonly DEATH_FX_MS = 560;
   private static readonly DEATH_CLEANUP_MS = 90;
 
+  private static readonly PLAYER_EVENT_STAGGER_MS = 280;
+  private static readonly AI_EVENT_STAGGER_MS = 620;
+  private static readonly AI_TURN_THINK_MS = 900;
+
   readonly renderedMyBattlefield = signal<RenderedBattlefieldCreature[]>([]);
   readonly renderedOpponentBattlefield = signal<RenderedBattlefieldCreature[]>([]);
   readonly activeDeathAnimations = signal(0);
@@ -61,6 +65,7 @@ export class GameBoard implements OnInit, OnDestroy {
   readonly isGameOver = this.gameService.isGameOver;
   readonly didWin = this.gameService.didWin;
   readonly loading = this.gameService.loading;
+  readonly error = this.gameService.error;
   readonly events = this.gameService.events;
   readonly isInteractionLocked = computed(() =>
     this.loading() || this.activeDeathAnimations() > 0
@@ -102,31 +107,90 @@ export class GameBoard implements OnInit, OnDestroy {
     return battlefield.filter(c => c.keywords?.includes('GUARD'));
   });
 
-  readonly disableEnemyHeroAttackTarget = computed(() => {
-    const isAttackTargeting =
-      this.targetMode() === 'attack' && this.selectedAttackerId() !== null;
-    return isAttackTargeting && this.opponentGuardCreatures().length > 0;
+  readonly attackButtonTooltip = computed<string | null>(() => {
+    if (this.targetMode() !== 'attack' || this.selectedAttackerId() === null) return null;
+
+    if (this.isInteractionLocked()) return 'Resolving action…';
+    if (!this.isMyTurn()) return "It's not your turn";
+
+    const attackerId = this.selectedAttackerId();
+    const attacker = (this.myState()?.battlefield ?? []).find(c => c.instanceId === attackerId);
+    if (!attacker) return 'Your attacker is no longer on the battlefield';
+    if (attacker.statuses?.includes('FROZEN')) return 'This creature is Frozen and cannot attack';
+    if (attacker.hasAttackedThisTurn) return 'This creature has already attacked this turn';
+    if (!attacker.canAttack) return 'This creature cannot attack right now';
+
+    const targetId = this.selectedTargetId();
+    if (!targetId) return 'Choose a target to attack';
+
+    if (targetId === 'FRIENDLY_HERO') return "You can't attack your own hero";
+
+    if (targetId !== 'ENEMY_HERO') {
+      const exists = (this.opponentState()?.battlefield ?? []).some(c => c.instanceId === targetId);
+      if (!exists) return 'That target is no longer available';
+    }
+
+    if (this.readyToAttack()) return null;
+
+    const guardReason = this.guardRestrictionReason(targetId);
+    return guardReason ?? 'Cannot attack that target';
   });
 
-  readonly enemyHeroGuardMessage = computed<string | null>(() => {
-    if (!this.disableEnemyHeroAttackTarget()) return null;
-
+  private guardRestrictionReason(targetId: string): string | null {
     const guards = this.opponentGuardCreatures();
     if (guards.length === 0) return null;
 
+    if (targetId === 'ENEMY_HERO') {
+      return this.guardRestrictionTooltipFromGuards(guards);
+    }
+
+    if (targetId === 'FRIENDLY_HERO') return null;
+
+    const target = (this.opponentState()?.battlefield ?? []).find(c => c.instanceId === targetId);
+    if (!target) return null;
+
+    const isGuard = target.keywords?.includes('GUARD') ?? false;
+    return isGuard ? null : this.guardRestrictionTooltipFromGuards(guards);
+  }
+
+  private guardRestrictionTooltipFromGuards(guards: BoardCreatureResponse[]): string {
     const guardNames = guards
       .map(c => this.getCard(c.cardId)?.name)
       .filter((n): n is string => !!n);
 
-    const suffix = guardNames.length > 0 ? guardNames.join(', ') : 'Guard creatures';
-    return `Guarded by: ${suffix}`;
-  });
-
-  readonly enemyHeroGuardHintToken = signal(0);
+    return guardNames.length > 0
+      ? `Must attack a Guard creature first: ${guardNames.join(', ')}`
+      : 'Must attack a Guard creature first';
+  }
   
   // Ready to attack flag
   readonly readyToAttack = computed(() => {
-    return this.selectedAttackerId() !== null && this.selectedTargetId() !== null;
+    if (!this.isMyTurn() || this.isInteractionLocked()) return false;
+
+    const attackerId = this.selectedAttackerId();
+    const targetId = this.selectedTargetId();
+    if (!attackerId || !targetId) return false;
+
+    const attacker = (this.myState()?.battlefield ?? []).find(c => c.instanceId === attackerId);
+    if (!attacker) return false;
+    if (attacker.statuses?.includes('FROZEN')) return false;
+    if (!attacker.canAttack || attacker.hasAttackedThisTurn) return false;
+
+    if (targetId !== 'ENEMY_HERO' && targetId !== 'FRIENDLY_HERO') {
+      const exists = (this.opponentState()?.battlefield ?? []).some(c => c.instanceId === targetId);
+      if (!exists) return false;
+    }
+
+    // If Guard exists, hero cannot be targeted.
+    if (targetId === 'ENEMY_HERO' && this.opponentGuardCreatures().length > 0) return false;
+
+    // If Guard exists, only Guard creatures can be targeted.
+    if (targetId !== 'ENEMY_HERO' && targetId !== 'FRIENDLY_HERO' && this.opponentGuardCreatures().length > 0) {
+      const target = (this.opponentState()?.battlefield ?? []).find(c => c.instanceId === targetId);
+      if (!target || !target.keywords?.includes('GUARD')) return false;
+    }
+
+    return true;
   });
 
   // Computed hand cards — all cards, used internally
@@ -216,6 +280,15 @@ export class GameBoard implements OnInit, OnDestroy {
     for (const event of newEvents) {
       if (event.type === 'TURN_START' && event.sourceId) {
         this.currentActorUserId = event.sourceId;
+
+        const isAiTurn =
+          this.currentActorUserId !== null &&
+          this.opponentUserId() !== null &&
+          this.currentActorUserId === this.opponentUserId();
+
+        if (isAiTurn) {
+          delayMs += GameBoard.AI_TURN_THINK_MS;
+        }
       }
 
       if (event.type === 'CARD_PLAYED' && event.sourceId) {
@@ -260,7 +333,13 @@ export class GameBoard implements OnInit, OnDestroy {
             event.type === 'DEATH' ||
             event.type === 'SUMMON'));
 
-      if (shouldStagger) delayMs += 280;
+      if (shouldStagger) {
+        const isAiTurn =
+          this.currentActorUserId !== null &&
+          this.opponentUserId() !== null &&
+          this.currentActorUserId === this.opponentUserId();
+        delayMs += isAiTurn ? GameBoard.AI_EVENT_STAGGER_MS : GameBoard.PLAYER_EVENT_STAGGER_MS;
+      }
     }
   });
 
@@ -582,15 +661,9 @@ export class GameBoard implements OnInit, OnDestroy {
     }
 
     if (this.targetMode() === 'attack') {
-      if (this.disableEnemyHeroAttackTarget()) return;
       // Set the target, don't attack immediately
       this.selectedTargetId.set('ENEMY_HERO');
     }
-  }
-
-  onEnemyHeroDisabledClick(): void {
-    if (!this.disableEnemyHeroAttackTarget()) return;
-    this.enemyHeroGuardHintToken.update(v => v + 1);
   }
 
   onMyHeroClick(): void {

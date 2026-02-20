@@ -100,12 +100,8 @@ public class GameController {
 		Authentication authentication,
 		@Valid @RequestBody CreateAiGameRequest request
 	) {
-		try {
-			GameActionResponse response = gameplayService.createAiGame(currentUserId(authentication), request);
-			return ResponseEntity.status(HttpStatus.CREATED).body(response);
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().build();
-		}
+		GameActionResponse response = gameplayService.createAiGame(currentUserId(authentication), request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	/**
@@ -117,12 +113,8 @@ public class GameController {
 		@PathVariable String id,
 		@Valid @RequestBody PlayCardRequest request
 	) {
-		try {
-			GameActionResponse response = gameplayService.playCard(UUID.fromString(id), currentUserId(authentication), request);
-			return ResponseEntity.ok(response);
-		} catch (IllegalArgumentException | IllegalStateException e) {
-			return ResponseEntity.badRequest().build();
-		}
+		GameActionResponse response = gameplayService.playCard(UUID.fromString(id), currentUserId(authentication), request);
+		return ResponseEntity.ok(response);
 	}
 
 	/**
@@ -134,12 +126,8 @@ public class GameController {
 		@PathVariable String id,
 		@Valid @RequestBody AttackRequest request
 	) {
-		try {
-			GameActionResponse response = gameplayService.attack(UUID.fromString(id), currentUserId(authentication), request);
-			return ResponseEntity.ok(response);
-		} catch (IllegalArgumentException | IllegalStateException e) {
-			return ResponseEntity.badRequest().build();
-		}
+		GameActionResponse response = gameplayService.attack(UUID.fromString(id), currentUserId(authentication), request);
+		return ResponseEntity.ok(response);
 	}
 
 	/**
@@ -150,12 +138,8 @@ public class GameController {
 		Authentication authentication,
 		@PathVariable String id
 	) {
-		try {
-			GameActionResponse response = gameplayService.endTurn(UUID.fromString(id), currentUserId(authentication));
-			return ResponseEntity.ok(response);
-		} catch (IllegalArgumentException | IllegalStateException e) {
-			return ResponseEntity.badRequest().build();
-		}
+		GameActionResponse response = gameplayService.endTurn(UUID.fromString(id), currentUserId(authentication));
+		return ResponseEntity.ok(response);
 	}
 
 	/**
@@ -166,11 +150,7 @@ public class GameController {
 		Authentication authentication,
 		@PathVariable String id
 	) {
-		try {
-			GameActionResponse response = gameplayService.surrender(UUID.fromString(id), currentUserId(authentication));
-			return ResponseEntity.ok(response);
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().build();
-		}
+		GameActionResponse response = gameplayService.surrender(UUID.fromString(id), currentUserId(authentication));
+		return ResponseEntity.ok(response);
 	}
 }

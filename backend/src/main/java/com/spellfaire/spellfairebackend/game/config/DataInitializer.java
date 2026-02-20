@@ -16,10 +16,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spellfaire.spellfairebackend.game.model.Card;
 import com.spellfaire.spellfairebackend.game.model.CardType;
+import com.spellfaire.spellfairebackend.game.model.ImmersiveQuote;
 import com.spellfaire.spellfairebackend.game.model.Keyword;
 import com.spellfaire.spellfairebackend.game.repo.CardRepository;
 import com.spellfaire.spellfairebackend.game.repo.DeckRepository;
 import com.spellfaire.spellfairebackend.game.repo.GameRepository;
+import com.spellfaire.spellfairebackend.game.repo.ImmersiveQuoteRepository;
 
 /**
  * Initializes the database with data from JSON files on startup.
@@ -33,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
 	private final CardRepository cardRepository;
 	private final DeckRepository deckRepository;
 	private final GameRepository gameRepository;
+	private final ImmersiveQuoteRepository immersiveQuoteRepository;
 	private final ObjectMapper objectMapper;
 
 	@Value("${spellfaire.data.init.enabled:true}")
@@ -45,11 +48,13 @@ public class DataInitializer implements CommandLineRunner {
 		CardRepository cardRepository,
 		DeckRepository deckRepository,
 		GameRepository gameRepository,
+		ImmersiveQuoteRepository immersiveQuoteRepository,
 		ObjectMapper objectMapper
 	) {
 		this.cardRepository = cardRepository;
 		this.deckRepository = deckRepository;
 		this.gameRepository = gameRepository;
+		this.immersiveQuoteRepository = immersiveQuoteRepository;
 		this.objectMapper = objectMapper;
 	}
 
@@ -69,6 +74,7 @@ public class DataInitializer implements CommandLineRunner {
 
 		loadCards();
 		loadTokenCards();
+		loadImmersiveQuotes();
 
 		log.info("Data initialization complete");
 	}
@@ -88,6 +94,34 @@ public class DataInitializer implements CommandLineRunner {
 
 		cardRepository.deleteAll();
 		log.info("Cleared table: cards");
+
+		immersiveQuoteRepository.deleteAll();
+		log.info("Cleared table: immersive_quotes");
+	}
+
+	/**
+	 * Load immersive quotes from JSON file.
+	 */
+	private void loadImmersiveQuotes() throws IOException {
+		log.info("Loading immersive quotes from JSON...");
+
+		ClassPathResource resource = new ClassPathResource("data/quotes.json");
+
+		if (!resource.exists()) {
+			log.warn("Quotes data file not found at: data/quotes.json");
+			return;
+		}
+
+		try (InputStream inputStream = resource.getInputStream()) {
+			List<ImmersiveQuote> quotes = objectMapper.readValue(
+				inputStream,
+				new TypeReference<List<ImmersiveQuote>>() {}
+			);
+
+			quotes.forEach(q -> q.setId(null));
+			immersiveQuoteRepository.saveAll(quotes);
+			log.info("Loaded {} immersive quotes", quotes.size());
+		}
 	}
 
 	/**

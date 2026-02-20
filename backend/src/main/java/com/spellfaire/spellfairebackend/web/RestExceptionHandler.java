@@ -15,6 +15,14 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class RestExceptionHandler {
+	@ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+	public ResponseEntity<ApiError> handleBadRequest(RuntimeException ex, HttpServletRequest request) {
+		String message = ex.getMessage() != null && !ex.getMessage().isBlank()
+				? ex.getMessage()
+				: "Bad request";
+		return build(HttpStatus.BAD_REQUEST, message, request);
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
 		String message = ex.getBindingResult().getFieldErrors().stream()

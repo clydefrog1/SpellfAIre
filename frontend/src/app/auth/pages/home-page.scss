@@ -1,5 +1,23 @@
 /* Home page component styles. All shared styling is in src/styles.scss */
 
+.home-page {
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-welcome {
+  margin-top: 0;
+  color: var(--sf-text-muted);
+}
+
+.home-quote {
+  margin-top: var(--sf-space-lg);
+  color: var(--sf-text-muted);
+}
+
 .home-actions {
   display: flex;
   gap: var(--sf-space-md);

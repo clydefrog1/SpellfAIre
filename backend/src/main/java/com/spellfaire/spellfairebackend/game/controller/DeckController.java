@@ -47,12 +47,8 @@ public class DeckController {
 		Authentication authentication,
 		@Valid @RequestBody CreateDeckRequest request
 	) {
-		try {
-			DeckResponse response = deckService.createDeck(currentUserId(authentication), request);
-			return ResponseEntity.status(HttpStatus.CREATED).body(response);
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().build();
-		}
+		DeckResponse response = deckService.createDeck(currentUserId(authentication), request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
 	/**
@@ -83,13 +79,9 @@ public class DeckController {
 		Authentication authentication,
 		@Valid @RequestBody CreateDeckRequest request
 	) {
-		try {
-			return deckService.updateDeck(UUID.fromString(id), currentUserId(authentication), request)
-				.map(ResponseEntity::ok)
-				.orElse(ResponseEntity.notFound().build());
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.badRequest().build();
-		}
+		return deckService.updateDeck(UUID.fromString(id), currentUserId(authentication), request)
+			.map(ResponseEntity::ok)
+			.orElse(ResponseEntity.notFound().build());
 	}
 
 	/**

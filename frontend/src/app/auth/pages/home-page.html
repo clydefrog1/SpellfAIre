@@ -1,5 +1,14 @@
-<main class="sf-page sf-page-wide">
+<main class="sf-page sf-page-wide home-page">
   <h1 class="sf-title">SpellfAIre</h1>
+
+  <p class="home-welcome">
+    Welcome, spellbinder. Beyond these runes lies a battlefield of vows and firelight—
+    choose your path, and let your deck speak in thunder.
+  </p>
+
+  <p class="home-quote" *ngIf="immersiveQuote() as q">
+    <em>- "{{ q }}"</em>
+  </p>
 
   <p *ngIf="user() as u">Logged in as <strong>{{ u.username }}</strong> ({{ u.email }})</p>
 

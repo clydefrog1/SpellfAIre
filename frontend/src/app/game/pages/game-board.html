@@ -12,8 +12,7 @@
         [maxHealth]="25"
         side="opponent"
         [highlighted]="selectedTargetId() === 'ENEMY_HERO'"
-        [disabled]="disableEnemyHeroAttackTarget()"
-        [attentionToken]="disableEnemyHeroAttackTarget() ? enemyHeroGuardHintToken() : null"
+        [disabled]="false"
         [attackTargetToken]="opponentUserId() ? getAttackTargetToken(opponentUserId()!) : null"
         [hitFx]="opponentUserId() ? getHitFx(opponentUserId()!) : null"
         [floatFx]="opponentUserId() ? getFloatFx(opponentUserId()!) : null"
@@ -22,14 +21,7 @@
         [maxMana]="opponentState()?.maxMana ?? 0"
         [deckCount]="opponentState()?.deck?.length ?? 0"
         (heroClick)="onEnemyHeroClick()"
-        (disabledClick)="onEnemyHeroDisabledClick()"
       />
-
-      @if (enemyHeroGuardMessage()) {
-        <div class="enemy-hero-guard-message" role="status">
-          {{ enemyHeroGuardMessage() }}
-        </div>
-      }
     </div>
   </div>
 
@@ -80,7 +72,8 @@
             class="sf-button attack-btn divider-btn"
             type="button"
             (click)="executeAttack()"
-            [disabled]="isInteractionLocked() || !readyToAttack()"
+            [disabled]="isInteractionLocked() || !isMyTurn() || !readyToAttack()"
+            [attr.title]="attackButtonTooltip()"
           >⚔️ Attack</button>
         }
       </div>
@@ -129,6 +122,10 @@
               }
             </span>
           </div>
+        }
+
+        @if (error()) {
+          <div class="enemy-hero-guard-message" role="status">{{ error() }}</div>
         }
       </div>
 
