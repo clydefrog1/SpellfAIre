@@ -17,6 +17,11 @@ export const routes: Routes = [
 		canActivate: [authGuard],
 	},
 	{
+		path: 'game-info',
+		loadComponent: () => import('./game/pages/game-info-page').then(m => m.GameInfoPage),
+		canActivate: [authGuard],
+	},
+	{
 		path: 'game',
 		loadChildren: () => import('./game/game.routes').then(m => m.gameRoutes),
 	},

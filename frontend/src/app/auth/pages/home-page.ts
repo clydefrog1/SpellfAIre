@@ -47,4 +47,8 @@ export class HomePage {
   goToLibrary(): void {
     this.router.navigateByUrl('/library');
   }
+
+  goToGameInfo(): void {
+    this.router.navigateByUrl('/game-info');
+  }
 }

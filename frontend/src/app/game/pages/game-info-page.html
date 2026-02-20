@@ -1,0 +1,223 @@
+<main class="sf-page sf-page-wide game-info">
+  <button class="sf-back-link" type="button" (click)="goBack()">← Back</button>
+
+  <header class="info-header">
+    <h1 class="sf-title">Game Info</h1>
+    <p class="info-subtitle">Clean rules and a quick guide to playing SpellfAIre.</p>
+  </header>
+
+  <section class="info-grid" aria-label="How to play">
+    <details class="sf-card info-panel">
+      <summary class="panel-summary">
+        <span class="summary-title">Quick rules (current build)</span>
+        <span class="summary-meta">2-minute read</span>
+      </summary>
+
+      <div class="panel-body">
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Quick start</span>
+            <span class="section-meta">5 steps</span>
+          </summary>
+          <div class="section-body" aria-label="Quick start">
+            <ol class="steps">
+              <li><strong>Goal:</strong> Reduce the enemy Hero to <strong>0 Health</strong> (Heroes start at <strong>25</strong>).</li>
+              <li><strong>Choose:</strong> Pick <strong>1 Faction</strong> (your creatures) and <strong>1 School</strong> (your spells). The deck is built automatically.</li>
+              <li><strong>Spend mana:</strong> Play creatures and cast spells while you have enough mana.</li>
+              <li><strong>Attack:</strong> Your creatures can attack once per turn (unless they’re not ready). If the enemy has <strong>Guard</strong>, you must attack a Guard creature first.</li>
+              <li><strong>End turn:</strong> On your next turn, your mana increases and refills, your creatures ready, and you draw a card.</li>
+            </ol>
+          </div>
+        </details>
+
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Turn flow (what happens automatically)</span>
+            <span class="section-meta">per turn</span>
+          </summary>
+          <div class="section-body" aria-label="Turn flow">
+            <ul class="bullets">
+              <li><strong>Start of turn:</strong> Max Mana +1 (up to 10), Current Mana refills, your creatures ready.</li>
+              <li><strong>Effects:</strong> “Start of your turn” creature effects resolve.</li>
+              <li><strong>Draw:</strong> Draw 1 card. If your deck is empty, you take <strong>Fatigue</strong> damage (1, then 2, then 3…).</li>
+              <li><strong>Main:</strong> Play cards, cast spells, and attack in any order.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Limits you’ll feel immediately</span>
+            <span class="section-meta">3 caps</span>
+          </summary>
+          <div class="section-body" aria-label="Limits">
+            <ul class="bullets">
+              <li><strong>Hand:</strong> Max 10. Extra draws are <strong>burned</strong> (discarded with no effect).</li>
+              <li><strong>Battlefield:</strong> Max 6 creatures per side.</li>
+              <li><strong>Mana:</strong> Max 10. Plan turns around your curve.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Combat</span>
+            <span class="section-meta">targets + damage</span>
+          </summary>
+          <div class="section-body" aria-label="Combat">
+            <ul class="bullets">
+              <li>Choose a target: an enemy creature or the enemy Hero.</li>
+              <li>If the defender controls any <strong>Guard</strong> creatures, attacks must target a Guard creature.</li>
+              <li>Creature vs creature damage is <strong>simultaneous</strong>.</li>
+              <li>If a creature’s Health reaches 0, it dies and any “When this dies” effects resolve.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Keywords & statuses</span>
+            <span class="section-meta">5 terms</span>
+          </summary>
+          <div class="section-body" aria-label="Keywords">
+            <ul class="bullets">
+              <li><strong>Guard:</strong> Must be attacked first by creatures.</li>
+              <li><strong>Charge:</strong> Can attack the turn it is played.</li>
+              <li><strong>Lifesteal:</strong> Damage dealt heals your Hero for the same amount.</li>
+              <li><strong>Ward:</strong> Prevents the first damage a creature would take, then is removed.</li>
+              <li><strong>Frozen:</strong> A Frozen creature can’t attack on its controller’s next turn (then the status clears).</li>
+            </ul>
+            <p class="panel-note">Tip: Guard only affects creature attacks. Spells can usually target around Guard unless the spell text says otherwise.</p>
+          </div>
+        </details>
+      </div>
+    </details>
+
+    <details class="sf-card info-panel">
+      <summary class="panel-summary">
+        <span class="summary-title">Extended rules (design)</span>
+        <span class="summary-meta">Deckbuilding + mulligan</span>
+      </summary>
+
+      <div class="panel-body">
+        <p class="panel-note">This section describes the intended full ruleset. Some parts may differ from the current UI.</p>
+
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Deckbuilding (24 cards)</span>
+            <span class="section-meta">14 + 10</span>
+          </summary>
+          <div class="section-body" aria-label="Deckbuilding">
+            <ul class="bullets">
+              <li>Choose exactly <strong>1 Faction</strong> and <strong>1 School</strong>.</li>
+              <li>Build a 24-card deck: <strong>14 creatures</strong> from your faction + <strong>10 spells</strong> from your school.</li>
+              <li>You may include up to <strong>2 copies</strong> of any card.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Starting hand & mulligan</span>
+            <span class="section-meta">3/4 + redraw</span>
+          </summary>
+          <div class="section-body" aria-label="Starting hand">
+            <ul class="bullets">
+              <li>First player draws <strong>3</strong>, second player draws <strong>4</strong>.</li>
+              <li><strong>Mulligan:</strong> Once at the start, you may replace any number of cards (they’re shuffled back before redrawing).</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="section-toggle" open>
+          <summary class="section-summary">
+            <span class="section-title">Phases (conceptual)</span>
+            <span class="section-meta">start → end</span>
+          </summary>
+          <div class="section-body" aria-label="Phases">
+            <ul class="bullets">
+              <li><strong>Start:</strong> Ready creatures; start-of-turn effects.</li>
+              <li><strong>Draw:</strong> Draw 1 (or Fatigue).</li>
+              <li><strong>Main:</strong> Play/cast/attack in any order.</li>
+              <li><strong>End:</strong> End-of-turn effects; pass control.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </details>
+
+    <details class="sf-card info-panel">
+      <summary class="panel-summary">
+        <span class="summary-title">Examples (in-game snapshots)</span>
+        <span class="summary-meta">Real UI components</span>
+      </summary>
+
+      <div class="panel-body">
+        <div class="snapshots">
+          <details class="section-toggle" open>
+            <summary class="section-summary">
+              <span class="section-title">Hero & mana</span>
+              <span class="section-meta">health + deck</span>
+            </summary>
+            <div class="section-body" aria-label="Hero example">
+              <p class="panel-note">Health drops to 0 to lose. Mana refills each turn and Max Mana grows to 10.</p>
+
+              <div class="hero-row">
+                <app-hero-portrait
+                  [side]="'player'"
+                  [health]="25"
+                  [maxHealth]="25"
+                  [currentMana]="5"
+                  [maxMana]="5"
+                  [deckCount]="14"
+                  [disabled]="true"
+                />
+
+                <app-hero-portrait
+                  [side]="'opponent'"
+                  [health]="18"
+                  [maxHealth]="25"
+                  [currentMana]="3"
+                  [maxMana]="3"
+                  [deckCount]="10"
+                  [disabled]="true"
+                />
+              </div>
+            </div>
+          </details>
+
+          <details class="section-toggle" open>
+            <summary class="section-summary">
+              <span class="section-title">Keyword cards</span>
+              <span class="section-meta">Guard / Charge / Ward</span>
+            </summary>
+            <div class="section-body" aria-label="Card examples">
+              <div class="snapshot-head">
+                <p class="panel-note">Open the full library to browse the whole set.</p>
+                <button class="sf-button sf-button-secondary" type="button" (click)="goToLibrary()">Open Card Library</button>
+              </div>
+
+              @if (loading()) {
+                <p class="panel-note">Loading example cards…</p>
+              } @else if (error()) {
+                <p class="sf-error">{{ error() }}</p>
+              } @else if (exampleCards().length === 0) {
+                <p class="panel-note">No example cards available.</p>
+              } @else {
+                <div class="example-grid" role="list">
+                  @for (c of exampleCards(); track c.id) {
+                    <div class="example-item" role="listitem">
+                      <app-game-card [card]="c" [interactive]="false" [large]="true" />
+                    </div>
+                  }
+                </div>
+              }
+
+              <p class="panel-note">These snapshots are live components: hover keyword icons to see their tooltips.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </details>
+  </section>
+</main>
