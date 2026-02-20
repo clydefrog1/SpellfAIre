@@ -115,19 +115,19 @@
   }
 
   &.hit-damage.hit-even {
-    animation: heroHitDamageEven 840ms ease-out;
+    animation: heroHitDamageEven 1200ms ease-out;
   }
 
   &.hit-damage.hit-odd {
-    animation: heroHitDamageOdd 840ms ease-out;
+    animation: heroHitDamageOdd 1200ms ease-out;
   }
 
   &.hit-heal.hit-even {
-    animation: heroHitHealEven 1040ms ease-out;
+    animation: heroHitHealEven 1400ms ease-out;
   }
 
   &.hit-heal.hit-odd {
-    animation: heroHitHealOdd 1040ms ease-out;
+    animation: heroHitHealOdd 1400ms ease-out;
   }
 
   &.attention-even {
@@ -159,11 +159,11 @@
   }
 
   &.float-even {
-    animation: heroFloatEven 1800ms ease-out;
+    animation: heroFloatEven 2400ms ease-out;
   }
 
   &.float-odd {
-    animation: heroFloatOdd 1800ms ease-out;
+    animation: heroFloatOdd 2400ms ease-out;
   }
 }
 

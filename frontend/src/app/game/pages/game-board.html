@@ -1,5 +1,8 @@
 <!-- Game Board Layout -->
-<div class="game-board" [class.targeting]="targetMode() !== 'none'">
+<div
+  class="game-board"
+  [class.targeting]="targetMode() !== 'none'"
+>
 
   <!-- Enemy Hero (top of screen) -->
   <div class="top-hero-bar">
@@ -32,23 +35,25 @@
 
   <!-- Opponent Battlefield -->
   <section class="board-row battlefield opponent-field">
-    @for (creature of opponentState()?.battlefield ?? []; track creature.instanceId) {
+    @for (entry of renderedOpponentBattlefield(); track entry.creature.instanceId) {
       <app-battlefield-creature
         @creatureSummon
-        [creature]="creature"
-        [card]="getCard(creature.cardId)"
+        [creature]="entry.creature"
+        [card]="getCard(entry.creature.cardId)"
         side="opponent"
-        [selectable]="targetMode() !== 'none'"
-        [highlighted]="selectedTargetId() === creature.instanceId"
-        [attackSourceToken]="getAttackSourceToken(creature.instanceId)"
-        [attackTargetToken]="getAttackTargetToken(creature.instanceId)"
-        [hitFx]="getHitFx(creature.instanceId)"
-        [floatFx]="getFloatFx(creature.instanceId)"
-        [spellFx]="getSpellFx(creature.instanceId)"
-        (creatureClick)="onEnemyCreatureClick(creature)"
+        [selectable]="!entry.isDying && !isInteractionLocked() && targetMode() !== 'none'"
+        [highlighted]="selectedTargetId() === entry.creature.instanceId"
+        [attackSourceToken]="getAttackSourceToken(entry.creature.instanceId)"
+        [attackTargetToken]="getAttackTargetToken(entry.creature.instanceId)"
+        [hitFx]="getHitFx(entry.creature.instanceId)"
+        [floatFx]="getFloatFx(entry.creature.instanceId)"
+        [spellFx]="getSpellFx(entry.creature.instanceId)"
+        [deathFx]="getDeathFx(entry.creature.instanceId)"
+        [dying]="entry.isDying"
+        (creatureClick)="onEnemyCreatureClick(entry.creature, entry.isDying)"
       />
     }
-    @if ((opponentState()?.battlefield?.length ?? 0) === 0) {
+    @if (renderedOpponentBattlefield().length === 0) {
       <div class="empty-field">No creatures</div>
     }
   </section>
@@ -67,7 +72,7 @@
             class="sf-button attack-btn divider-btn"
             type="button"
             (click)="executeSpellCast()"
-            [disabled]="loading() || !selectedTargetId()"
+            [disabled]="isInteractionLocked() || !selectedTargetId()"
           >✨ Cast Spell</button>
         }
         @if (targetMode() === 'attack' && selectedAttackerId()) {
@@ -75,7 +80,7 @@
             class="sf-button attack-btn divider-btn"
             type="button"
             (click)="executeAttack()"
-            [disabled]="loading() || !readyToAttack()"
+            [disabled]="isInteractionLocked() || !readyToAttack()"
           >⚔️ Attack</button>
         }
       </div>
@@ -119,7 +124,7 @@
             </span>
             <span class="turn-meta">
               Turn {{ game()?.turnNumber }}
-              @if (isMyTurn() && !loading()) {
+              @if (isMyTurn() && !isInteractionLocked()) {
                 &nbsp;&bull;&nbsp;<strong>Play cards</strong> or <strong>Attack</strong>
               }
             </span>
@@ -131,7 +136,7 @@
         <button
           class="sf-button action-btn end-turn-btn divider-btn"
           type="button"
-          [disabled]="!isMyTurn() || loading()"
+          [disabled]="!isMyTurn() || isInteractionLocked()"
           (click)="endTurn()"
         >End Turn</button>
       </div>
@@ -142,13 +147,13 @@
       <button
         class="sf-button surrender-btn divider-btn"
         type="button"
-        [disabled]="loading()"
+        [disabled]="isInteractionLocked()"
         (click)="surrender()"
       >Surrender</button>
     </div>
   </div>
 
-  @if (showTutorialHint() && isMyTurn() && !loading() && (myState()?.battlefield?.length ?? 0) > 0) {
+  @if (showTutorialHint() && isMyTurn() && !isInteractionLocked() && renderedMyBattlefield().length > 0) {
     <div class="tutorial-hint">
       <div class="hint-content">
         <button class="hint-close" type="button" (click)="dismissHint()">✕</button>
@@ -164,24 +169,26 @@
 
   <!-- Player Battlefield -->
   <section class="board-row battlefield player-field">
-    @for (creature of myState()?.battlefield ?? []; track creature.instanceId) {
+    @for (entry of renderedMyBattlefield(); track entry.creature.instanceId) {
       <app-battlefield-creature
         @creatureSummon
-        [creature]="creature"
-        [card]="getCard(creature.cardId)"
+        [creature]="entry.creature"
+        [card]="getCard(entry.creature.cardId)"
         side="player"
-        [selected]="selectedAttackerId() === creature.instanceId"
-        [highlighted]="targetMode() === 'spell' && selectedTargetId() === creature.instanceId"
-        [selectable]="isMyTurn() && creature.canAttack && !creature.hasAttackedThisTurn"
-        [attackSourceToken]="getAttackSourceToken(creature.instanceId)"
-        [attackTargetToken]="getAttackTargetToken(creature.instanceId)"
-        [hitFx]="getHitFx(creature.instanceId)"
-        [floatFx]="getFloatFx(creature.instanceId)"
-        [spellFx]="getSpellFx(creature.instanceId)"
-        (creatureClick)="onMyCreatureClick(creature)"
+        [selected]="selectedAttackerId() === entry.creature.instanceId"
+        [highlighted]="targetMode() === 'spell' && selectedTargetId() === entry.creature.instanceId"
+        [selectable]="isMyTurn() && !isInteractionLocked() && !entry.isDying && entry.creature.canAttack && !entry.creature.hasAttackedThisTurn"
+        [attackSourceToken]="getAttackSourceToken(entry.creature.instanceId)"
+        [attackTargetToken]="getAttackTargetToken(entry.creature.instanceId)"
+        [hitFx]="getHitFx(entry.creature.instanceId)"
+        [floatFx]="getFloatFx(entry.creature.instanceId)"
+        [spellFx]="getSpellFx(entry.creature.instanceId)"
+        [deathFx]="getDeathFx(entry.creature.instanceId)"
+        [dying]="entry.isDying"
+        (creatureClick)="onMyCreatureClick(entry.creature, entry.isDying)"
       />
     }
-    @if ((myState()?.battlefield?.length ?? 0) === 0) {
+    @if (renderedMyBattlefield().length === 0) {
       <div class="empty-field">No creatures</div>
     }
   </section>

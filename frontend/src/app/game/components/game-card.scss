@@ -112,12 +112,12 @@
 
 // Compact variant (battlefield mini-card)
 .game-card.compact {
-  width: 120px;
-  height: 96px;
-  max-height: 96px;
+  width: var(--sf-bf-card-width, 136px);
+  height: var(--sf-bf-card-height, 100px);
+  max-height: var(--sf-bf-card-height, 100px);
   padding: 4px;
-  padding-bottom: 6px;
-  gap: 4px;
+  padding-bottom: 5px;
+  gap: 3px;
   margin-top: 0;
   overflow: hidden;
 
@@ -193,15 +193,15 @@
   }
 
   .card-rules {
-    padding: 3px 5px;
+    padding: 2px 4px;
     font-size: 7.2px;
     line-height: 1.15;
-    min-height: 24px;
+    min-height: 26px;
     -webkit-line-clamp: 2;
   }
 
   .card-rules.empty {
-    min-height: 24px;
+    min-height: 26px;
   }
 }
 

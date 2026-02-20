@@ -15,6 +15,7 @@
   [class.hit-heal]="hitFx()?.kind === 'heal'"
   [class.hit-even]="hitEven()"
   [class.hit-odd]="hitOdd()"
+  [class.death-active]="deathFx() !== null"
   [class.has-guard]="hasGuard()"
   [class.has-ward]="hasWard()"
   [class.frozen]="isFrozen()"
@@ -27,6 +28,13 @@
   [attr.title]="getTooltip()"
   [attr.aria-label]="name() + ' ' + creature().attack + '/' + creature().health"
 >
+  @if (deathFx()) {
+    <div
+      class="death-impact"
+      aria-hidden="true"
+    ></div>
+  }
+
   @if (spellFx()) {
     <div
       class="spell-impact"

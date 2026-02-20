@@ -18,6 +18,10 @@ export interface SpellImpactFx {
   token: number;
 }
 
+export interface DeathFx {
+  token: number;
+}
+
 @Component({
   selector: 'app-battlefield-creature',
   standalone: true,
@@ -37,6 +41,8 @@ export class BattlefieldCreature {
   readonly hitFx = input<CombatHitFx | null>(null);
   readonly floatFx = input<CombatFloatFx | null>(null);
   readonly spellFx = input<SpellImpactFx | null>(null);
+  readonly deathFx = input<DeathFx | null>(null);
+  readonly dying = input(false);
   readonly creatureClick = output<BoardCreatureResponse>();
 
   readonly name = computed(() => this.card()?.name ?? '???');

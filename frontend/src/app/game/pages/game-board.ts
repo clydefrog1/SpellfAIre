@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { GameService } from '../services/game.service';
@@ -32,13 +32,27 @@ import {
   styleUrl: './game-board.scss',
   animations: [cardEnter, creatureSummon, turnPulse],
 })
-export class GameBoard implements OnInit {
+export class GameBoard implements OnInit, OnDestroy {
   private readonly gameService = inject(GameService);
   private readonly router = inject(Router);
 
   private lastProcessedEventIndex = 0;
   private fxToken = 0;
   private currentActorUserId: string | null = null;
+  private readonly deathSequenceIds = new Set<string>();
+  private readonly timeoutHandles = new Set<number>();
+  private readonly lastKnownCreatureById = signal<Record<string, BoardCreatureResponse>>({});
+  private readonly lastKnownSideById = signal<Record<string, 'player' | 'opponent'>>({});
+
+  private static readonly HIT_FX_DURATION_MS = 1200;
+  private static readonly FLOAT_FX_DURATION_MS = 2400;
+  private static readonly HIT_BEFORE_DEATH_MS = GameBoard.HIT_FX_DURATION_MS;
+  private static readonly DEATH_FX_MS = 560;
+  private static readonly DEATH_CLEANUP_MS = 90;
+
+  readonly renderedMyBattlefield = signal<RenderedBattlefieldCreature[]>([]);
+  readonly renderedOpponentBattlefield = signal<RenderedBattlefieldCreature[]>([]);
+  readonly activeDeathAnimations = signal(0);
 
   readonly game = this.gameService.game;
   readonly myState = this.gameService.myState;
@@ -48,6 +62,9 @@ export class GameBoard implements OnInit {
   readonly didWin = this.gameService.didWin;
   readonly loading = this.gameService.loading;
   readonly events = this.gameService.events;
+  readonly isInteractionLocked = computed(() =>
+    this.loading() || this.activeDeathAnimations() > 0
+  );
 
   readonly myUserId = computed(() => this.myState()?.userId ?? null);
   readonly opponentUserId = computed(() => this.opponentState()?.userId ?? null);
@@ -69,6 +86,8 @@ export class GameBoard implements OnInit {
   readonly spellImpactByTarget = signal<
     Record<string, { kind: 'benefit' | 'harm'; token: number }>
   >({});
+
+  readonly deathFxByTarget = signal<Record<string, { token: number }>>({});
 
   // Selection state
   readonly selectedHandCardId = signal<string | null>(null);
@@ -136,7 +155,7 @@ export class GameBoard implements OnInit {
   // Check if card can be played
   canPlayCard(card: CardResponse): boolean {
     const state = this.myState();
-    if (!state || !this.isMyTurn()) return false;
+    if (!state || !this.isMyTurn() || this.isInteractionLocked()) return false;
     if (card.cost > state.currentMana) return false;
     if (card.cardType === 'CREATURE' && state.battlefield.length >= 6) return false;
     return true;
@@ -154,6 +173,13 @@ export class GameBoard implements OnInit {
     
     const seen = localStorage.getItem('sf-attack-tutorial-seen');
     this.showTutorialHint.set(!seen);
+  }
+
+  ngOnDestroy(): void {
+    for (const handle of this.timeoutHandles) {
+      window.clearTimeout(handle);
+    }
+    this.timeoutHandles.clear();
   }
 
   readonly selectedSpellCard = computed<CardResponse | null>(() => {
@@ -182,6 +208,7 @@ export class GameBoard implements OnInit {
     this.lastProcessedEventIndex = allEvents.length;
 
     let delayMs = 0;
+    const damageDelayByTarget = new Map<string, number>();
 
     let inSpellResolution = false;
     let spellCastKind: 'benefit' | 'harm' = 'benefit';
@@ -206,6 +233,18 @@ export class GameBoard implements OnInit {
       }
 
       this.scheduleCombatFxForEvent(event, delayMs);
+
+      if (event.type === 'DAMAGE' && event.targetId) {
+        damageDelayByTarget.set(event.targetId, delayMs);
+      }
+
+      if (event.type === 'DEATH' && event.sourceId) {
+        const lastDamageDelay = damageDelayByTarget.get(event.sourceId);
+        const hasRecentDamageFx =
+          lastDamageDelay !== undefined && Math.abs(delayMs - lastDamageDelay) <= 420;
+
+        this.scheduleDeathSequence(event.sourceId, delayMs, hasRecentDamageFx);
+      }
 
       if (inSpellResolution) {
         this.scheduleSpellImpactFromResolutionEvent(event, delayMs, spellCastKind);
@@ -286,13 +325,13 @@ export class GameBoard implements OnInit {
     const token = ++this.fxToken;
     const durationMs = 1560;
 
-    window.setTimeout(() => {
+    this.setTrackedTimeout(() => {
       this.spellImpactByTarget.update(map => ({
         ...map,
         [targetId]: { kind, token },
       }));
 
-      window.setTimeout(() => {
+      this.setTrackedTimeout(() => {
         this.spellImpactByTarget.update(map => {
           const current = map[targetId];
           if (!current || current.token !== token) return map;
@@ -303,10 +342,179 @@ export class GameBoard implements OnInit {
     }, delayMs);
   }
 
+  private readonly renderedBattlefieldSyncEffect = effect(() => {
+    const myBattlefield = this.myState()?.battlefield ?? [];
+    const opponentBattlefield = this.opponentState()?.battlefield ?? [];
+
+    this.lastKnownCreatureById.update(cache => {
+      const next = { ...cache };
+      for (const creature of myBattlefield) {
+        next[creature.instanceId] = creature;
+      }
+      for (const creature of opponentBattlefield) {
+        next[creature.instanceId] = creature;
+      }
+      return next;
+    });
+
+    this.lastKnownSideById.update(cache => {
+      const next = { ...cache };
+      for (const creature of myBattlefield) {
+        next[creature.instanceId] = 'player';
+      }
+      for (const creature of opponentBattlefield) {
+        next[creature.instanceId] = 'opponent';
+      }
+      return next;
+    });
+
+    this.renderedMyBattlefield.update(current =>
+      this.mergeRenderedBattlefield(current, myBattlefield)
+    );
+
+    this.renderedOpponentBattlefield.update(current =>
+      this.mergeRenderedBattlefield(current, opponentBattlefield)
+    );
+  });
+
+  private mergeRenderedBattlefield(
+    currentRendered: RenderedBattlefieldCreature[],
+    canonicalBattlefield: BoardCreatureResponse[]
+  ): RenderedBattlefieldCreature[] {
+    const canonicalById = new Map(canonicalBattlefield.map(c => [c.instanceId, c]));
+    const next: RenderedBattlefieldCreature[] = canonicalBattlefield.map(creature => ({
+      creature,
+      isDying: false,
+    }));
+
+    for (const entry of currentRendered) {
+      if (!entry.isDying) continue;
+      if (canonicalById.has(entry.creature.instanceId)) continue;
+      next.push(entry);
+    }
+
+    return next.sort((a, b) => a.creature.position - b.creature.position);
+  }
+
+  private scheduleDeathSequence(
+    instanceId: string,
+    delayMs: number,
+    hasRecentDamageFx: boolean
+  ): void {
+    if (this.deathSequenceIds.has(instanceId)) return;
+
+    this.deathSequenceIds.add(instanceId);
+    this.activeDeathAnimations.update(v => v + 1);
+
+    // Pin the creature in rendered battlefield immediately so it never blinks out
+    // between hit resolution and the delayed death animation start.
+    this.ensureRenderedAsDying(instanceId);
+
+    this.setTrackedTimeout(() => {
+      if (!hasRecentDamageFx) {
+        this.scheduleSyntheticHitFx(instanceId);
+      }
+
+      this.setTrackedTimeout(() => {
+        const token = ++this.fxToken;
+
+        this.deathFxByTarget.update(map => ({
+          ...map,
+          [instanceId]: { token },
+        }));
+
+        this.setTrackedTimeout(() => {
+          this.deathFxByTarget.update(map => {
+            const current = map[instanceId];
+            if (!current || current.token !== token) return map;
+            const { [instanceId]: _, ...rest } = map;
+            return rest;
+          });
+        }, GameBoard.DEATH_FX_MS);
+
+        this.setTrackedTimeout(() => {
+          this.removeRenderedDyingCreature(instanceId);
+          this.deathSequenceIds.delete(instanceId);
+          this.activeDeathAnimations.update(v => Math.max(0, v - 1));
+        }, GameBoard.DEATH_FX_MS + GameBoard.DEATH_CLEANUP_MS);
+      }, GameBoard.HIT_BEFORE_DEATH_MS);
+    }, delayMs);
+  }
+
+  private scheduleSyntheticHitFx(targetId: string): void {
+    const token = ++this.fxToken;
+
+    this.hitFlashByTarget.update(map => ({
+      ...map,
+      [targetId]: { kind: 'damage', token },
+    }));
+
+    this.setTrackedTimeout(() => {
+      this.hitFlashByTarget.update(map => {
+        const current = map[targetId];
+        if (!current || current.token !== token) return map;
+        const { [targetId]: _, ...rest } = map;
+        return rest;
+      });
+    }, GameBoard.HIT_FX_DURATION_MS);
+  }
+
+  private ensureRenderedAsDying(instanceId: string): void {
+    const cachedCreature = this.lastKnownCreatureById()[instanceId];
+    if (!cachedCreature) return;
+
+    const side = this.getCreatureSide(instanceId) ?? this.lastKnownSideById()[instanceId];
+    if (!side) return;
+
+    const dyingCreature: BoardCreatureResponse = {
+      ...cachedCreature,
+      canAttack: false,
+      hasAttackedThisTurn: true,
+    };
+
+    const targetSignal =
+      side === 'player' ? this.renderedMyBattlefield : this.renderedOpponentBattlefield;
+
+    targetSignal.update(current => {
+      const existingIndex = current.findIndex(c => c.creature.instanceId === instanceId);
+      if (existingIndex >= 0) {
+        const next = [...current];
+        next[existingIndex] = {
+          creature: dyingCreature,
+          isDying: true,
+        };
+        return next;
+      }
+
+      return [...current, { creature: dyingCreature, isDying: true }].sort(
+        (a, b) => a.creature.position - b.creature.position
+      );
+    });
+  }
+
+  private removeRenderedDyingCreature(instanceId: string): void {
+    this.renderedMyBattlefield.update(current =>
+      current.filter(c => c.creature.instanceId !== instanceId)
+    );
+
+    this.renderedOpponentBattlefield.update(current =>
+      current.filter(c => c.creature.instanceId !== instanceId)
+    );
+  }
+
+  private setTrackedTimeout(callback: () => void, delayMs: number): void {
+    const handle = window.setTimeout(() => {
+      this.timeoutHandles.delete(handle);
+      callback();
+    }, delayMs);
+
+    this.timeoutHandles.add(handle);
+  }
+
   // ── Hand interaction ──
 
   onHandCardClick(card: CardResponse): void {
-    if (!this.isMyTurn() || this.loading()) return;
+    if (!this.isMyTurn() || this.isInteractionLocked()) return;
 
     // If card needs targeting
     if (this.needsTarget(card)) {
@@ -332,8 +540,8 @@ export class GameBoard implements OnInit {
 
   // ── Battlefield interaction ──
 
-  onMyCreatureClick(creature: BoardCreatureResponse): void {
-    if (!this.isMyTurn() || this.loading()) return;
+  onMyCreatureClick(creature: BoardCreatureResponse, isDying = false): void {
+    if (!this.isMyTurn() || this.isInteractionLocked() || isDying) return;
 
     // If we're targeting for a spell on a friendly creature
     if (this.targetMode() === 'spell') {
@@ -351,8 +559,8 @@ export class GameBoard implements OnInit {
     }
   }
 
-  onEnemyCreatureClick(creature: BoardCreatureResponse): void {
-    if (!this.isMyTurn() || this.loading()) return;
+  onEnemyCreatureClick(creature: BoardCreatureResponse, isDying = false): void {
+    if (!this.isMyTurn() || this.isInteractionLocked() || isDying) return;
 
     if (this.targetMode() === 'spell') {
       this.selectedTargetId.set(creature.instanceId);
@@ -366,7 +574,7 @@ export class GameBoard implements OnInit {
   }
 
   onEnemyHeroClick(): void {
-    if (!this.isMyTurn() || this.loading()) return;
+    if (!this.isMyTurn() || this.isInteractionLocked()) return;
 
     if (this.targetMode() === 'spell') {
       this.selectedTargetId.set('ENEMY_HERO');
@@ -411,6 +619,7 @@ export class GameBoard implements OnInit {
   }
   
   async executeAttack(): Promise<void> {
+    if (this.isInteractionLocked()) return;
     const attackerId = this.selectedAttackerId();
     const targetId = this.selectedTargetId();
     if (!attackerId || !targetId) return;
@@ -419,6 +628,7 @@ export class GameBoard implements OnInit {
   }
 
   async executeSpellCast(): Promise<void> {
+    if (this.isInteractionLocked()) return;
     const cardId = this.selectedHandCardId();
     const targetId = this.selectedTargetId();
     if (!cardId || !targetId) return;
@@ -446,10 +656,10 @@ export class GameBoard implements OnInit {
       if (!resolvedTargetId) return;
 
       const token = ++this.fxToken;
-      window.setTimeout(() => {
+      this.setTrackedTimeout(() => {
         this.attackAnim.set({ attackerId: event.sourceId!, targetId: resolvedTargetId, token });
 
-        window.setTimeout(() => {
+        this.setTrackedTimeout(() => {
           const current = this.attackAnim();
           if (current?.token === token) {
             this.attackAnim.set(null);
@@ -469,7 +679,7 @@ export class GameBoard implements OnInit {
       const token = ++this.fxToken;
       const targetId = event.targetId;
 
-      window.setTimeout(() => {
+      this.setTrackedTimeout(() => {
         this.hitFlashByTarget.update(map => ({
           ...map,
           [targetId]: { kind, token },
@@ -480,23 +690,23 @@ export class GameBoard implements OnInit {
           [targetId]: { kind, value, token },
         }));
 
-        window.setTimeout(() => {
+        this.setTrackedTimeout(() => {
           this.hitFlashByTarget.update(map => {
             const current = map[targetId];
             if (!current || current.token !== token) return map;
             const { [targetId]: _, ...rest } = map;
             return rest;
           });
-        }, 900);
+        }, GameBoard.HIT_FX_DURATION_MS);
 
-        window.setTimeout(() => {
+        this.setTrackedTimeout(() => {
           this.floatFxByTarget.update(map => {
             const current = map[targetId];
             if (!current || current.token !== token) return map;
             const { [targetId]: _, ...rest } = map;
             return rest;
           });
-        }, 1800);
+        }, GameBoard.FLOAT_FX_DURATION_MS);
       }, delayMs);
     }
   }
@@ -552,12 +762,18 @@ export class GameBoard implements OnInit {
     return this.spellImpactByTarget()[id] ?? null;
   }
 
+  getDeathFx(id: string): { token: number } | null {
+    return this.deathFxByTarget()[id] ?? null;
+  }
+
   async endTurn(): Promise<void> {
+    if (this.isInteractionLocked()) return;
     this.cancelSelection();
     await this.gameService.endTurn();
   }
 
   async surrender(): Promise<void> {
+    if (this.isInteractionLocked()) return;
     await this.gameService.surrender();
   }
 
@@ -577,4 +793,9 @@ export class GameBoard implements OnInit {
   trackByCardId(_: number, c: CardResponse): string {
     return c.id;
   }
+}
+
+interface RenderedBattlefieldCreature {
+  creature: BoardCreatureResponse;
+  isDying: boolean;
 }
