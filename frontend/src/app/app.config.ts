@@ -8,12 +8,23 @@ import { API_BASE_URL } from './api/api-base-url.token';
 import { authInterceptor } from './auth/services/auth.interceptor';
 import { loadingInterceptor } from './shared/interceptors/loading.interceptor';
 
+declare global {
+  interface Window {
+    __SPELLFAIRE_API_BASE_URL__?: string;
+  }
+}
+
+const runtimeApiBaseUrl =
+  typeof window !== 'undefined' && window.__SPELLFAIRE_API_BASE_URL__
+    ? window.__SPELLFAIRE_API_BASE_URL__
+    : 'http://localhost:8080';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor, loadingInterceptor])),
     provideAnimations(),
-    { provide: API_BASE_URL, useValue: 'http://localhost:8080' }
+    { provide: API_BASE_URL, useValue: runtimeApiBaseUrl }
   ]
 };

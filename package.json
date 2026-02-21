@@ -1,0 +1,16 @@
+{
+  "name": "spellfaire-workspace",
+  "private": true,
+  "scripts": {
+    "test:backend": "backend\\mvnw.cmd -f backend\\pom.xml verify",
+    "test:frontend": "npm --prefix frontend run test -- --watch=false --browsers=ChromeHeadless",
+    "test:e2e": "npm --prefix frontend run e2e:mock",
+    "test:e2e:real": "npm --prefix frontend run e2e:real",
+    "test:e2e:all": "node scripts/test-e2e-all.mjs",
+    "test:e2e:all:auto": "node scripts/test-e2e-all.mjs --autostart",
+    "test:e2e:all:auto:reset": "node scripts/test-e2e-all.mjs --autostart --reset-db",
+    "test:e2e:down": "node scripts/test-e2e-down.mjs",
+    "test:e2e:reset": "node scripts/test-e2e-reset.mjs",
+    "test:all": "npm run test:backend && npm run test:frontend && npm run test:e2e"
+  }
+}
