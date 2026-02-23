@@ -261,6 +261,12 @@ export class GameBoard implements OnInit, OnDestroy {
     return this.isDamageSpell(card);
   });
 
+  readonly spellRequiresFriendlyCreatureTarget = computed(() => {
+    const card = this.selectedSpellCard();
+    if (!card) return false;
+    return this.requiresFriendlyCreatureTarget(card);
+  });
+
   private readonly combatFxEffect = effect(() => {
     const allEvents = this.events();
 
@@ -611,10 +617,22 @@ export class GameBoard implements OnInit, OnDestroy {
   private needsTarget(card: CardResponse): boolean {
     if (card.cardType !== 'SPELL') return false;
     const text = card.rulesText?.toLowerCase() ?? '';
+    if (this.requiresFriendlyCreatureTarget(card)) return true;
     // Cards that need a target (creature or hero)
     return text.includes('target') || text.includes('a creature')
       || text.includes('an enemy creature') || text.includes('a friendly creature')
       || text.includes('enemy creature') || text.includes('friendly creature');
+  }
+
+  private requiresFriendlyCreatureTarget(card: CardResponse): boolean {
+    if (card.cardType !== 'SPELL') return false;
+
+    const cardName = card.name.toLowerCase();
+    const text = card.rulesText?.toLowerCase() ?? '';
+
+    return cardName === 'grim bargain'
+      || text.includes('one of your creatures')
+      || text.includes('destroy one of your creatures');
   }
 
   // ── Battlefield interaction ──
@@ -642,6 +660,7 @@ export class GameBoard implements OnInit, OnDestroy {
     if (!this.isMyTurn() || this.isInteractionLocked() || isDying) return;
 
     if (this.targetMode() === 'spell') {
+      if (this.spellRequiresFriendlyCreatureTarget()) return;
       this.selectedTargetId.set(creature.instanceId);
       return;
     }
@@ -656,6 +675,7 @@ export class GameBoard implements OnInit, OnDestroy {
     if (!this.isMyTurn() || this.isInteractionLocked()) return;
 
     if (this.targetMode() === 'spell') {
+      if (this.spellRequiresFriendlyCreatureTarget()) return;
       this.selectedTargetId.set('ENEMY_HERO');
       return;
     }
@@ -668,7 +688,7 @@ export class GameBoard implements OnInit, OnDestroy {
 
   onMyHeroClick(): void {
     if (this.targetMode() === 'spell') {
-      if (this.spellDisallowsFriendlyTargets()) return;
+      if (this.spellDisallowsFriendlyTargets() || this.spellRequiresFriendlyCreatureTarget()) return;
       this.selectedTargetId.set('FRIENDLY_HERO');
     }
   }

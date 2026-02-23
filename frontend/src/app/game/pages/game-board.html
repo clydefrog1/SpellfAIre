@@ -33,7 +33,7 @@
         [creature]="entry.creature"
         [card]="getCard(entry.creature.cardId)"
         side="opponent"
-        [selectable]="!entry.isDying && !isInteractionLocked() && targetMode() !== 'none'"
+        [selectable]="!entry.isDying && !isInteractionLocked() && (targetMode() === 'attack' || (targetMode() === 'spell' && !spellRequiresFriendlyCreatureTarget()))"
         [highlighted]="selectedTargetId() === entry.creature.instanceId"
         [attackSourceToken]="getAttackSourceToken(entry.creature.instanceId)"
         [attackTargetToken]="getAttackTargetToken(entry.creature.instanceId)"
@@ -89,7 +89,9 @@
                 <small>Click Cast Spell to execute, or Cancel</small>
               } @else {
                 <strong>Spell Targeting</strong>
-                @if (spellDisallowsFriendlyTargets()) {
+                @if (spellRequiresFriendlyCreatureTarget()) {
+                  <small>Click one of your creatures to select a target</small>
+                } @else if (spellDisallowsFriendlyTargets()) {
                   <small>Click an enemy creature or hero to select a target</small>
                 } @else {
                   <small>Click a creature or hero to select a target</small>
@@ -174,7 +176,7 @@
         side="player"
         [selected]="selectedAttackerId() === entry.creature.instanceId"
         [highlighted]="targetMode() === 'spell' && selectedTargetId() === entry.creature.instanceId"
-        [selectable]="isMyTurn() && !isInteractionLocked() && !entry.isDying && entry.creature.canAttack && !entry.creature.hasAttackedThisTurn"
+        [selectable]="isMyTurn() && !isInteractionLocked() && !entry.isDying && ((targetMode() === 'spell' && !spellDisallowsFriendlyTargets()) || (targetMode() !== 'spell' && entry.creature.canAttack && !entry.creature.hasAttackedThisTurn))"
         [attackSourceToken]="getAttackSourceToken(entry.creature.instanceId)"
         [attackTargetToken]="getAttackTargetToken(entry.creature.instanceId)"
         [hitFx]="getHitFx(entry.creature.instanceId)"
@@ -220,7 +222,7 @@
         [health]="myState()?.heroHealth ?? 0"
         [maxHealth]="25"
         side="player"
-        [highlighted]="targetMode() === 'spell' && !spellDisallowsFriendlyTargets()"
+        [highlighted]="targetMode() === 'spell' && !spellDisallowsFriendlyTargets() && !spellRequiresFriendlyCreatureTarget()"
         [attackTargetToken]="myUserId() ? getAttackTargetToken(myUserId()!) : null"
         [hitFx]="myUserId() ? getHitFx(myUserId()!) : null"
         [floatFx]="myUserId() ? getFloatFx(myUserId()!) : null"
