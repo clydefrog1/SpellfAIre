@@ -299,8 +299,11 @@ public class SpellEffectResolver {
 	private void resolveWither(GamePlayerState opponent, String targetId, List<GameEvent> events) {
 		BoardCreature target = findCreatureOnSide(opponent, targetId);
 		if (target != null) {
-			target.setAttack(Math.max(0, target.getAttack() - 2));
-			events.add(GameEvent.buff(target.getId().toString(), -2, "Wither: -2 Attack"));
+			int debuffAmount = Math.min(2, target.getAttack());
+			target.setAttack(target.getAttack() - debuffAmount);
+			target.setTemporaryAttackDebuff(target.getTemporaryAttackDebuff() + debuffAmount);
+			events.add(GameEvent.buff(target.getId().toString(), -debuffAmount,
+					"Wither: -" + debuffAmount + " Attack this turn"));
 		}
 	}
 
@@ -417,6 +420,7 @@ public class SpellEffectResolver {
 			creature.setStatuses(new HashSet<>());
 		}
 		creature.getStatuses().add(Status.FROZEN);
+		creature.setFrozenForNextTurn(true);
 		events.add(GameEvent.freeze(creature.getId() != null ? creature.getId().toString() : "creature",
 				source + " freezes " + creature.getCard().getName()));
 	}

@@ -63,9 +63,18 @@ export class BattlefieldCreature {
     this.creature().health < this.creature().maxHealth
   );
 
+  readonly showPlayerFrozenBlockedBadge = computed(() => {
+    const creature = this.creature();
+    return this.side() === 'player' && creature.frozenBlocksAttacksThisTurn && !creature.hasAttackedThisTurn;
+  });
+
+  readonly showEnemyFrozenBadge = computed(() =>
+    this.side() === 'opponent' && this.isFrozen()
+  );
+
   readonly isAttackReady = computed(() => {
     const c = this.creature();
-    return this.side() === 'player' && c.canAttack && !c.hasAttackedThisTurn && !this.isFrozen();
+    return this.side() === 'player' && c.canAttack && !c.hasAttackedThisTurn && !c.frozenBlocksAttacksThisTurn;
   });
 
   readonly isAttackSource = computed(() => this.attackSourceToken() !== null);
@@ -120,14 +129,14 @@ export class BattlefieldCreature {
     const cardName = this.name();
     
     if (this.side() === 'player') {
-      if (c.canAttack && !c.hasAttackedThisTurn && !this.isFrozen()) {
+      if (c.frozenBlocksAttacksThisTurn) {
+        return `${cardName} - Frozen - cannot attack this turn`;
+      }
+      if (c.canAttack && !c.hasAttackedThisTurn) {
         return `${cardName} - Click to select for attack`;
       }
       if (c.hasAttackedThisTurn) {
         return `${cardName} - Already attacked this turn`;
-      }
-      if (this.isFrozen()) {
-        return `${cardName} - Frozen (cannot attack)`;
       }
       if (!c.canAttack) {
         return `${cardName} - Cannot attack yet (summoning sickness)`;

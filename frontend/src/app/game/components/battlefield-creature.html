@@ -78,7 +78,15 @@
     <div class="bf-card-fallback">{{ name() }}</div>
   }
 
-  @if (isAttackReady()) {
+  @if (showPlayerFrozenBlockedBadge()) {
+    <div class="frozen-blocked-badge" title="Frozen - cannot attack this turn">
+      ❄️
+    </div>
+  } @else if (showEnemyFrozenBadge()) {
+    <div class="frozen-badge" title="Frozen">
+      ❄️
+    </div>
+  } @else if (isAttackReady()) {
     <div class="attack-ready-badge" title="Ready to attack - Click to select">
       🗡️
     </div>

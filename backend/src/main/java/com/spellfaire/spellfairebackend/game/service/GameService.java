@@ -256,6 +256,7 @@ public class GameService {
 		response.setMaxHealth(creature.getMaxHealth());
 		response.setCanAttack(creature.isCanAttack());
 		response.setHasAttackedThisTurn(creature.isHasAttackedThisTurn());
+		response.setFrozenBlocksAttacksThisTurn(creature.isFrozenBlocksAttacksThisTurn());
 		response.setKeywords(creature.getKeywords());
 		response.setStatuses(creature.getStatuses());
 		response.setPosition(creature.getPosition());

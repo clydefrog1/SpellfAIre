@@ -20,7 +20,6 @@ import com.spellfaire.spellfairebackend.game.model.Game;
 import com.spellfaire.spellfairebackend.game.model.GamePlayerState;
 import com.spellfaire.spellfairebackend.game.model.Keyword;
 import com.spellfaire.spellfairebackend.game.model.PlayerZoneCard;
-import com.spellfaire.spellfairebackend.game.model.Status;
 
 /**
  * Heuristic-based AI opponent.
@@ -75,7 +74,7 @@ public class AiService {
 		if (!enemyHasGuard) {
 			for (BoardCreature c : aiState.getBattlefield()) {
 				if (c.isCanAttack() && !c.isHasAttackedThisTurn()
-						&& (c.getStatuses() == null || !c.getStatuses().contains(Status.FROZEN))) {
+						&& !c.isFrozenBlocksAttacksThisTurn()) {
 					totalDamage += c.getAttack();
 				}
 			}
@@ -130,7 +129,7 @@ public class AiService {
 		for (BoardCreature creature : new ArrayList<>(aiState.getBattlefield())) {
 			if (humanState.getHeroHealth() <= 0) break;
 			if (!creature.isCanAttack() || creature.isHasAttackedThisTurn()) continue;
-			if (creature.getStatuses() != null && creature.getStatuses().contains(Status.FROZEN)) continue;
+			if (creature.isFrozenBlocksAttacksThisTurn()) continue;
 
 			AttackRequest req = new AttackRequest();
 			req.setAttackerInstanceId(creature.getId().toString());
@@ -193,7 +192,7 @@ public class AiService {
 
 		for (BoardCreature attacker : new ArrayList<>(aiState.getBattlefield())) {
 			if (!attacker.isCanAttack() || attacker.isHasAttackedThisTurn()) continue;
-			if (attacker.getStatuses() != null && attacker.getStatuses().contains(Status.FROZEN)) continue;
+			if (attacker.isFrozenBlocksAttacksThisTurn()) continue;
 
 			// Recalculate guard status each iteration (a guard might have died)
 			boolean guardPresent = humanState.getBattlefield().stream()

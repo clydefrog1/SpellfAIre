@@ -116,7 +116,7 @@ export class GameBoard implements OnInit, OnDestroy {
     const attackerId = this.selectedAttackerId();
     const attacker = (this.myState()?.battlefield ?? []).find(c => c.instanceId === attackerId);
     if (!attacker) return 'Your attacker is no longer on the battlefield';
-    if (attacker.statuses?.includes('FROZEN')) return 'This creature is Frozen and cannot attack';
+    if (attacker.frozenBlocksAttacksThisTurn) return 'This creature is Frozen and cannot attack this turn';
     if (attacker.hasAttackedThisTurn) return 'This creature has already attacked this turn';
     if (!attacker.canAttack) return 'This creature cannot attack right now';
 
@@ -173,7 +173,7 @@ export class GameBoard implements OnInit, OnDestroy {
 
     const attacker = (this.myState()?.battlefield ?? []).find(c => c.instanceId === attackerId);
     if (!attacker) return false;
-    if (attacker.statuses?.includes('FROZEN')) return false;
+    if (attacker.frozenBlocksAttacksThisTurn) return false;
     if (!attacker.canAttack || attacker.hasAttackedThisTurn) return false;
 
     if (targetId !== 'ENEMY_HERO' && targetId !== 'FRIENDLY_HERO') {
@@ -630,7 +630,7 @@ export class GameBoard implements OnInit, OnDestroy {
     }
 
     // Select creature for attack
-    if (creature.canAttack && !creature.hasAttackedThisTurn) {
+    if (creature.canAttack && !creature.hasAttackedThisTurn && !creature.frozenBlocksAttacksThisTurn) {
       this.selectedAttackerId.set(creature.instanceId);
       this.selectedTargetId.set(null);
       this.targetMode.set('attack');

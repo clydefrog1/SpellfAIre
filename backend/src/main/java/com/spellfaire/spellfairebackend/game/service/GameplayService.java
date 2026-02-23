@@ -170,6 +170,10 @@ public class GameplayService {
 			throw new IllegalArgumentException("Not enough mana");
 		}
 
+		if (card.getCardType() == CardType.SPELL) {
+			validateSpellTarget(card, playerState, opponentState, request.getTargetId());
+		}
+
 		List<GameEvent> events = new ArrayList<>();
 
 		// Deduct mana
@@ -210,6 +214,8 @@ public class GameplayService {
 					request.getTargetId()));
 
 		} else if (card.getCardType() == CardType.SPELL) {
+			List<DeadCreatureContext> creaturesBeforeSpell = snapshotBattlefield(playerState, opponentState);
+
 			// Remove from hand, move to discard
 			handCard.setZone(CardZone.DISCARD);
 			handCard.setPosition(0);
@@ -220,6 +226,7 @@ public class GameplayService {
 			// Resolve spell effect
 			events.addAll(spellResolver.resolveSpell(card, playerState, opponentState,
 					request.getTargetId()));
+			events.addAll(resolveSpellDeaths(playerState, opponentState, creaturesBeforeSpell));
 		}
 
 		// Check for game over
@@ -257,7 +264,7 @@ public class GameplayService {
 		if (attacker.isHasAttackedThisTurn()) {
 			throw new IllegalArgumentException("Creature already attacked this turn");
 		}
-		if (attacker.getStatuses() != null && attacker.getStatuses().contains(Status.FROZEN)) {
+		if (attacker.isFrozenBlocksAttacksThisTurn()) {
 			throw new IllegalArgumentException("Creature is frozen");
 		}
 
@@ -460,6 +467,12 @@ public class GameplayService {
 
 		Card card = handCard.getCard();
 		if (card.getCost() > playerState.getCurrentMana()) return null;
+		if (card.getCardType() == CardType.SPELL) {
+			String targetId = pickAiSpellTarget(card, playerState, opponentState);
+			if (!isValidSpellTarget(card, playerState, opponentState, targetId)) {
+				return null;
+			}
+		}
 
 		List<GameEvent> events = new ArrayList<>();
 		playerState.setCurrentMana(playerState.getCurrentMana() - card.getCost());
@@ -490,6 +503,8 @@ public class GameplayService {
 			events.addAll(creatureResolver.resolveWhenPlayed(creature, playerState, opponentState, null));
 
 		} else if (card.getCardType() == CardType.SPELL) {
+			List<DeadCreatureContext> creaturesBeforeSpell = snapshotBattlefield(playerState, opponentState);
+
 			handCard.setZone(CardZone.DISCARD);
 			handCard.setPosition(0);
 			events.add(GameEvent.cardPlayed(card.getId().toString(), "AI cast " + card.getName()));
@@ -497,6 +512,7 @@ public class GameplayService {
 			// AI picks targets for spells
 			String targetId = pickAiSpellTarget(card, playerState, opponentState);
 			events.addAll(spellResolver.resolveSpell(card, playerState, opponentState, targetId));
+			events.addAll(resolveSpellDeaths(playerState, opponentState, creaturesBeforeSpell));
 		}
 
 		return new GameActionResponse(null, events);
@@ -512,7 +528,7 @@ public class GameplayService {
 			.orElse(null);
 
 		if (attacker == null || !attacker.isCanAttack() || attacker.isHasAttackedThisTurn()) return null;
-		if (attacker.getStatuses() != null && attacker.getStatuses().contains(Status.FROZEN)) return null;
+		if (attacker.isFrozenBlocksAttacksThisTurn()) return null;
 
 		List<GameEvent> events = new ArrayList<>();
 
@@ -611,9 +627,19 @@ public class GameplayService {
 
 		// Ready creatures and handle Frozen
 		for (BoardCreature creature : state.getBattlefield()) {
-			if (creature.getStatuses() != null && creature.getStatuses().contains(Status.FROZEN)) {
-				// Frozen prevents attacking this turn, then clears
-				creature.getStatuses().remove(Status.FROZEN);
+			if (creature.getTemporaryAttackDebuff() > 0) {
+				creature.setAttack(creature.getAttack() + creature.getTemporaryAttackDebuff());
+				creature.setTemporaryAttackDebuff(0);
+			}
+
+			creature.setFrozenBlocksAttacksThisTurn(false);
+			if (creature.isFrozenForNextTurn()) {
+				// Frozen prevents attacking on this controller turn, then clears
+				creature.setFrozenForNextTurn(false);
+				if (creature.getStatuses() != null) {
+					creature.getStatuses().remove(Status.FROZEN);
+				}
+				creature.setFrozenBlocksAttacksThisTurn(true);
 				creature.setCanAttack(false);
 			} else {
 				creature.setCanAttack(true);
@@ -650,6 +676,92 @@ public class GameplayService {
 		if (game.getCurrentPhase() != expected) {
 			throw new IllegalArgumentException("Invalid phase: expected " + expected);
 		}
+	}
+
+	private void validateSpellTarget(Card card, GamePlayerState playerState,
+								 GamePlayerState opponentState, String targetId) {
+		if (!isValidSpellTarget(card, playerState, opponentState, targetId)) {
+			throw new IllegalArgumentException("Invalid spell target");
+		}
+	}
+
+	private boolean isValidSpellTarget(Card card, GamePlayerState playerState,
+								  GamePlayerState opponentState, String targetId) {
+		return switch (card.getName()) {
+			case "Dark Touch" -> {
+				if ("ENEMY_HERO".equals(targetId) || "FRIENDLY_HERO".equals(targetId)) {
+					yield true;
+				}
+				yield findCreatureById(playerState, opponentState, targetId) != null;
+			}
+			case "Wither" -> findCreatureOnState(opponentState, targetId) != null;
+			case "Grim Bargain" -> findCreatureOnState(playerState, targetId) != null;
+			case "Void Snare" -> {
+				BoardCreature target = findCreatureOnState(opponentState, targetId);
+				yield target != null && target.getCard().getCost() <= 5;
+			}
+			default -> true;
+		};
+	}
+
+	private BoardCreature findCreatureById(GamePlayerState playerState, GamePlayerState opponentState,
+									 String creatureId) {
+		if (creatureId == null) {
+			return null;
+		}
+		for (BoardCreature creature : playerState.getBattlefield()) {
+			if (creature.getId() != null && creature.getId().toString().equals(creatureId)) {
+				return creature;
+			}
+		}
+		for (BoardCreature creature : opponentState.getBattlefield()) {
+			if (creature.getId() != null && creature.getId().toString().equals(creatureId)) {
+				return creature;
+			}
+		}
+		return null;
+	}
+
+	private BoardCreature findCreatureOnState(GamePlayerState ownerState, String creatureId) {
+		if (creatureId == null) {
+			return null;
+		}
+		for (BoardCreature creature : ownerState.getBattlefield()) {
+			if (creature.getId() != null && creature.getId().toString().equals(creatureId)) {
+				return creature;
+			}
+		}
+		return null;
+	}
+
+	private List<DeadCreatureContext> snapshotBattlefield(GamePlayerState playerState,
+											 GamePlayerState opponentState) {
+		List<DeadCreatureContext> snapshot = new ArrayList<>();
+		for (BoardCreature creature : playerState.getBattlefield()) {
+			snapshot.add(new DeadCreatureContext(creature, playerState, opponentState));
+		}
+		for (BoardCreature creature : opponentState.getBattlefield()) {
+			snapshot.add(new DeadCreatureContext(creature, opponentState, playerState));
+		}
+		return snapshot;
+	}
+
+	private List<GameEvent> resolveSpellDeaths(GamePlayerState playerState, GamePlayerState opponentState,
+											 List<DeadCreatureContext> beforeSpell) {
+		List<GameEvent> events = new ArrayList<>();
+		for (DeadCreatureContext entry : beforeSpell) {
+			if (!entry.owner().getBattlefield().contains(entry.creature())) {
+				moveCreatureToDiscard(entry.owner(), entry.creature());
+				events.addAll(creatureResolver.resolveWhenDies(entry.creature(), entry.owner(), entry.opponent()));
+			}
+		}
+		return events;
+	}
+
+	private record DeadCreatureContext(
+			BoardCreature creature,
+			GamePlayerState owner,
+			GamePlayerState opponent) {
 	}
 
 	GamePlayerState getPlayerState(Game game, String playerId) {

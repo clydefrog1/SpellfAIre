@@ -16,6 +16,7 @@ public class BoardCreatureResponse {
 	private int maxHealth;
 	private boolean canAttack;
 	private boolean hasAttackedThisTurn;
+	private boolean frozenBlocksAttacksThisTurn;
 	private Set<Keyword> keywords;
 	private Set<Status> statuses;
 	private int position;
@@ -75,6 +76,14 @@ public class BoardCreatureResponse {
 
 	public void setHasAttackedThisTurn(boolean hasAttackedThisTurn) {
 		this.hasAttackedThisTurn = hasAttackedThisTurn;
+	}
+
+	public boolean isFrozenBlocksAttacksThisTurn() {
+		return frozenBlocksAttacksThisTurn;
+	}
+
+	public void setFrozenBlocksAttacksThisTurn(boolean frozenBlocksAttacksThisTurn) {
+		this.frozenBlocksAttacksThisTurn = frozenBlocksAttacksThisTurn;
 	}
 
 	public Set<Keyword> getKeywords() {

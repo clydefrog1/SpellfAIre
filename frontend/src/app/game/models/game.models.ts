@@ -45,6 +45,7 @@ export interface BoardCreatureResponse {
   maxHealth: number;
   canAttack: boolean;
   hasAttackedThisTurn: boolean;
+  frozenBlocksAttacksThisTurn: boolean;
   keywords: Keyword[];
   statuses: Status[];
   position: number;

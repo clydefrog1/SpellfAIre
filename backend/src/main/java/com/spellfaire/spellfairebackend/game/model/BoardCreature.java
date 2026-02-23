@@ -41,6 +41,9 @@ public class BoardCreature {
 	private int attack;         // Can be modified during the game
 
 	@Column(nullable = false)
+	private int temporaryAttackDebuff;
+
+	@Column(nullable = false)
 	private int health;         // Current health
 
 	@Column(nullable = false)
@@ -51,6 +54,12 @@ public class BoardCreature {
 
 	@Column(nullable = false)
 	private boolean hasAttackedThisTurn;
+
+	@Column(nullable = false)
+	private boolean frozenForNextTurn;
+
+	@Column(nullable = false)
+	private boolean frozenBlocksAttacksThisTurn;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "board_creature_keywords", joinColumns = @JoinColumn(name = "board_creature_id"))
@@ -74,10 +83,13 @@ public class BoardCreature {
 		this.playerState = playerState;
 		this.card = card;
 		this.attack = attack;
+		this.temporaryAttackDebuff = 0;
 		this.health = health;
 		this.maxHealth = health;
 		this.canAttack = keywords != null && keywords.contains(Keyword.CHARGE);
 		this.hasAttackedThisTurn = false;
+		this.frozenForNextTurn = false;
+		this.frozenBlocksAttacksThisTurn = false;
 		this.keywords = keywords;
 		this.position = position;
 	}
@@ -115,6 +127,14 @@ public class BoardCreature {
 		this.attack = attack;
 	}
 
+	public int getTemporaryAttackDebuff() {
+		return temporaryAttackDebuff;
+	}
+
+	public void setTemporaryAttackDebuff(int temporaryAttackDebuff) {
+		this.temporaryAttackDebuff = temporaryAttackDebuff;
+	}
+
 	public int getHealth() {
 		return health;
 	}
@@ -145,6 +165,22 @@ public class BoardCreature {
 
 	public void setHasAttackedThisTurn(boolean hasAttackedThisTurn) {
 		this.hasAttackedThisTurn = hasAttackedThisTurn;
+	}
+
+	public boolean isFrozenForNextTurn() {
+		return frozenForNextTurn;
+	}
+
+	public void setFrozenForNextTurn(boolean frozenForNextTurn) {
+		this.frozenForNextTurn = frozenForNextTurn;
+	}
+
+	public boolean isFrozenBlocksAttacksThisTurn() {
+		return frozenBlocksAttacksThisTurn;
+	}
+
+	public void setFrozenBlocksAttacksThisTurn(boolean frozenBlocksAttacksThisTurn) {
+		this.frozenBlocksAttacksThisTurn = frozenBlocksAttacksThisTurn;
 	}
 
 	public Set<Keyword> getKeywords() {
