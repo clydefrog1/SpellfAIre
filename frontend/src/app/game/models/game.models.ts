@@ -58,6 +58,8 @@ export interface BoardCreatureResponse {
 export interface GamePlayerStateResponse {
   userId: string;
   deckId: string;
+  faction: Faction | null;
+  magicSchool: MagicSchool | null;
   heroHealth: number;
   maxMana: number;
   currentMana: number;

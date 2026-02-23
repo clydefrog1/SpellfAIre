@@ -2,6 +2,9 @@ package com.spellfaire.spellfairebackend.game.dto;
 
 import java.util.List;
 
+import com.spellfaire.spellfairebackend.game.model.Faction;
+import com.spellfaire.spellfairebackend.game.model.MagicSchool;
+
 /**
  * DTO for player state in game responses.
  * Mirrors the old GamePlayerState structure for API backward compatibility.
@@ -9,6 +12,8 @@ import java.util.List;
 public class GamePlayerStateResponse {
 	private String userId;
 	private String deckId;
+	private Faction faction;
+	private MagicSchool magicSchool;
 	private int heroHealth;
 	private int maxMana;
 	private int currentMana;
@@ -33,6 +38,22 @@ public class GamePlayerStateResponse {
 
 	public void setDeckId(String deckId) {
 		this.deckId = deckId;
+	}
+
+	public Faction getFaction() {
+		return faction;
+	}
+
+	public void setFaction(Faction faction) {
+		this.faction = faction;
+	}
+
+	public MagicSchool getMagicSchool() {
+		return magicSchool;
+	}
+
+	public void setMagicSchool(MagicSchool magicSchool) {
+		this.magicSchool = magicSchool;
 	}
 
 	public int getHeroHealth() {

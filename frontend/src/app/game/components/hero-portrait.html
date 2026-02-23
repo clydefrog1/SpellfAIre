@@ -64,6 +64,28 @@
     <span class="hero-name">
       @if (side() === 'player') { Champion } @else { Dark Mage }
     </span>
+
+    @if (factionDisplay() || schoolDisplay()) {
+      <div class="hero-loadout-row" [attr.aria-label]="'Loadout: ' + (factionDisplay()?.label ?? 'Unknown Faction') + ', ' + (schoolDisplay()?.label ?? 'Unknown School')">
+        <span class="hero-loadout-pill hero-loadout-faction" [class.unknown]="!factionDisplay()">
+          @if (factionDisplay()) {
+            <span class="hero-loadout-icon">{{ factionDisplay()!.icon }}</span>
+            <span class="hero-loadout-text">{{ factionDisplay()!.label }}</span>
+          } @else {
+            <span class="hero-loadout-text">Unknown Faction</span>
+          }
+        </span>
+
+        <span class="hero-loadout-pill hero-loadout-school" [class.unknown]="!schoolDisplay()">
+          @if (schoolDisplay()) {
+            <span class="hero-loadout-icon">{{ schoolDisplay()!.icon }}</span>
+            <span class="hero-loadout-text">{{ schoolDisplay()!.label }}</span>
+          } @else {
+            <span class="hero-loadout-text">Unknown School</span>
+          }
+        </span>
+      </div>
+    }
   </div>
 
   <!-- Stats block -->

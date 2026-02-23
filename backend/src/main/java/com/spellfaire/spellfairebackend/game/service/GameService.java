@@ -215,6 +215,16 @@ public class GameService {
 		GamePlayerStateResponse response = new GamePlayerStateResponse();
 		response.setUserId(state.getUserId());
 		response.setDeckId(state.getDeckId());
+		if (state.getDeckId() != null) {
+			try {
+				deckRepository.findById(UUID.fromString(state.getDeckId())).ifPresent(deck -> {
+					response.setFaction(deck.getFaction());
+					response.setMagicSchool(deck.getMagicSchool());
+				});
+			} catch (IllegalArgumentException ignored) {
+				// Keep faction/school unset when deck ID is malformed.
+			}
+		}
 		response.setHeroHealth(state.getHeroHealth());
 		response.setMaxMana(state.getMaxMana());
 		response.setCurrentMana(state.getCurrentMana());

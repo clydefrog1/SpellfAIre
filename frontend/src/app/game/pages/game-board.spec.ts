@@ -132,6 +132,8 @@ describe('GameBoard Grim Bargain targeting', () => {
   const makePlayerState = (userId: string, battlefield: BoardCreatureResponse[], hand: string[]): GamePlayerStateResponse => ({
     userId,
     deckId: `${userId}-deck`,
+    faction: userId === 'p1' ? 'NECROPOLIS' : 'WILDCLAN',
+    magicSchool: userId === 'p1' ? 'SHADOW' : 'FROST',
     heroHealth: 25,
     maxMana: 5,
     currentMana: 5,

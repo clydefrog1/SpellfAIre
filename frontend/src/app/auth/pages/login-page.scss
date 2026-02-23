@@ -1,2 +1,17 @@
 /* Login page component styles. All shared styling is in src/styles.scss */
-/* Add page-specific overrides here if needed. */
+
+.auth-page.login-page {
+	min-height: 100vh;
+	min-height: 100dvh;
+	margin: 0 auto;
+	padding-top: clamp(var(--sf-space-md), 3vh, var(--sf-space-2xl));
+	padding-bottom: clamp(var(--sf-space-sm), 2vh, var(--sf-space-xl));
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.auth-page.login-page .sf-card {
+	gap: var(--sf-space-sm);
+	padding: clamp(var(--sf-space-md), 2.2vh, var(--sf-space-xl));
+}

@@ -1,7 +1,9 @@
 package com.spellfaire.spellfairebackend.game;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -118,6 +120,121 @@ class GameControllerIT {
 		Map<String, Object> player1State = (Map<String, Object>) game.get("player1State");
 		assertNotNull(player1State.get("deckId"));
 		assertNotNull(player1State.get("hand"));
+		assertEquals("KINGDOM", player1State.get("faction"));
+		assertEquals("FIRE", player1State.get("magicSchool"));
+
+		Map<String, Object> player2State = (Map<String, Object>) game.get("player2State");
+		assertNotNull(player2State.get("deckId"));
+		assertNotNull(player2State.get("faction"));
+		assertNotNull(player2State.get("magicSchool"));
+		assertNotEquals("KINGDOM", player2State.get("faction"));
+		assertNotEquals("FIRE", player2State.get("magicSchool"));
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	void playCardReturnsBadRequestWhenCardNotInHand() throws Exception {
+		String accessToken = registerAndGetAccessToken();
+		Map<String, Object> createPayload = createAiGame(accessToken);
+
+		Map<String, Object> game = (Map<String, Object>) createPayload.get("game");
+		String gameId = (String) game.get("id");
+
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url("/api/games/" + gameId + "/play-card")))
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+				.header(HttpHeaders.CONTENT_TYPE, "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(
+						"{\"cardId\":\"" + UUID.randomUUID() + "\"}"))
+				.build();
+
+		HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(400, response.statusCode());
+		assertTrue(response.body().contains("Card not in hand"));
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	void attackReturnsBadRequestWhenAttackerDoesNotExist() throws Exception {
+		String accessToken = registerAndGetAccessToken();
+		Map<String, Object> createPayload = createAiGame(accessToken);
+
+		Map<String, Object> game = (Map<String, Object>) createPayload.get("game");
+		String gameId = (String) game.get("id");
+
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url("/api/games/" + gameId + "/attack")))
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+				.header(HttpHeaders.CONTENT_TYPE, "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(
+						"{\"attackerInstanceId\":\"" + UUID.randomUUID() + "\",\"targetId\":\"ENEMY_HERO\"}"))
+				.build();
+
+		HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(400, response.statusCode());
+		assertTrue(response.body().contains("Attacker not found"));
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	void endTurnReturnsBadRequestForUserNotInGame() throws Exception {
+		String ownerToken = registerAndGetAccessToken();
+		String strangerToken = registerAndGetAccessToken();
+		Map<String, Object> createPayload = createAiGame(ownerToken);
+
+		Map<String, Object> game = (Map<String, Object>) createPayload.get("game");
+		String gameId = (String) game.get("id");
+
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url("/api/games/" + gameId + "/end-turn")))
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + strangerToken)
+				.POST(HttpRequest.BodyPublishers.noBody())
+				.build();
+
+		HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(400, response.statusCode());
+		assertTrue(response.body().contains("Not your turn"));
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	void surrenderSetsFinishedStatusAndAiAsWinner() throws Exception {
+		String accessToken = registerAndGetAccessToken();
+		Map<String, Object> createPayload = createAiGame(accessToken);
+
+		Map<String, Object> gameMap = (Map<String, Object>) createPayload.get("game");
+		String gameId = (String) gameMap.get("id");
+
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url("/api/games/" + gameId + "/surrender")))
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+				.POST(HttpRequest.BodyPublishers.noBody())
+				.build();
+
+		HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(200, response.statusCode());
+
+		Map<String, Object> payload = OBJECT_MAPPER.readValue(response.body(), Map.class);
+		Map<String, Object> updatedGame = (Map<String, Object>) payload.get("game");
+		assertEquals("FINISHED", updatedGame.get("gameStatus"));
+		assertEquals("AI", updatedGame.get("winnerId"));
+	}
+
+	private Map<String, Object> createAiGame(String accessToken) throws Exception {
+		Map<String, Object> body = Map.of(
+				"faction", "KINGDOM",
+				"magicSchool", "FIRE");
+
+		HttpRequest request = HttpRequest.newBuilder()
+				.uri(URI.create(url("/api/games/ai")))
+				.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+				.header(HttpHeaders.CONTENT_TYPE, "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(OBJECT_MAPPER.writeValueAsString(body)))
+				.build();
+
+		HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+		assertEquals(201, response.statusCode());
+		return OBJECT_MAPPER.readValue(response.body(), Map.class);
 	}
 
 	@SuppressWarnings("unchecked")

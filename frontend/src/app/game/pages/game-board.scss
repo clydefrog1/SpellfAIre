@@ -12,6 +12,8 @@
   --sf-divider-height: clamp(64px, 7.2vh, 76px);
   --sf-bf-card-width: clamp(124px, 9.5vw, 148px);
   --sf-bf-card-height: clamp(94px, 9vh, 108px);
+  --sf-hand-card-width: clamp(112px, 7vw, 128px);
+  --sf-hand-card-height: clamp(176px, 18vh, 196px);
 
   &.targeting {
     cursor: crosshair;
@@ -102,7 +104,7 @@
   position: relative;
   border: 1px solid rgba(60, 77, 85, 0.45);
   box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.35);
-  overflow-x: auto;
+  overflow-x: hidden;
 
   // Subtle stone-tile texture overlay
   &::before {
@@ -329,8 +331,22 @@
   align-items: flex-end;
   gap: var(--sf-space-xs);
   overflow: visible;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+}
+
+.hand-group-cards > app-game-card {
+  flex: 0 0 auto;
+}
+
+.hand-group-creatures .hand-group-cards {
+  justify-content: flex-end;
+}
+
+.hand-group-spells .hand-group-cards {
+  justify-content: flex-start;
 }
 
 .hand-group-empty {
@@ -347,7 +363,7 @@
   flex-direction: row;
   align-items: flex-end;
   gap: var(--sf-space-sm);
-  padding: 0 var(--sf-space-md);
+  padding: 0 var(--sf-space-sm);
   flex-shrink: 0;
   border-left: 1px solid rgba(255, 255, 255, 0.07);
   border-right: 1px solid rgba(255, 255, 255, 0.07);

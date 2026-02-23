@@ -20,6 +20,8 @@
         [currentMana]="opponentState()?.currentMana ?? 0"
         [maxMana]="opponentState()?.maxMana ?? 0"
         [deckCount]="opponentState()?.deck?.length ?? 0"
+        [faction]="opponentState()?.faction ?? null"
+        [magicSchool]="opponentState()?.magicSchool ?? null"
         (heroClick)="onEnemyHeroClick()"
       />
     </div>
@@ -230,6 +232,8 @@
         [currentMana]="myState()?.currentMana ?? 0"
         [maxMana]="myState()?.maxMana ?? 0"
         [deckCount]="myState()?.deck?.length ?? 0"
+        [faction]="myState()?.faction ?? null"
+        [magicSchool]="myState()?.magicSchool ?? null"
         (heroClick)="onMyHeroClick()"
       />
     </div>

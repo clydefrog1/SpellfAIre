@@ -1,9 +1,9 @@
 .game-card {
   display: flex;
   flex-direction: column;
-  width: 132px;
-  height: 204px;
-  max-height: 204px;
+  width: var(--sf-hand-card-width, 132px);
+  height: var(--sf-hand-card-height, 204px);
+  max-height: var(--sf-hand-card-height, 204px);
   padding: 6px;
   padding-bottom: 12px;
   border-radius: 10px;

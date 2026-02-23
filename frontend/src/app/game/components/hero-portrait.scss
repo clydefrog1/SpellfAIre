@@ -382,7 +382,7 @@
   background: rgba(0, 0, 0, 0.45);
   border-top: 1px solid rgba(185, 145, 68, 0.2);
   border-bottom: 1px solid rgba(185, 145, 68, 0.15);
-  padding: 3px var(--sf-space-xs);
+  padding: 3px var(--sf-space-xs) 4px;
   text-align: center;
 }
 
@@ -391,6 +391,56 @@
   font-weight: 700;
   letter-spacing: 0.3px;
   color: var(--sf-text);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-loadout-row {
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.hero-loadout-pill {
+  max-width: 78px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(217, 163, 90, 0.28);
+  background: rgba(0, 0, 0, 0.34);
+  color: var(--sf-text-light);
+
+  &.unknown {
+    border-color: rgba(60, 77, 85, 0.45);
+    color: var(--sf-text-muted);
+  }
+}
+
+.hero-loadout-faction {
+  border-color: rgba(91, 141, 217, 0.38);
+}
+
+.hero-loadout-school {
+  border-color: rgba(168, 126, 212, 0.42);
+}
+
+.hero-loadout-icon {
+  font-size: 9px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.hero-loadout-text {
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.1px;
   text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
