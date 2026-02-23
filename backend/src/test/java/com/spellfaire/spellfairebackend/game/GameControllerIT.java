@@ -92,6 +92,18 @@ class GameControllerIT {
 	}
 
 	@Test
+	void gameplayEndpointsRequireAuthentication() throws Exception {
+		String randomGameId = UUID.randomUUID().toString();
+
+		assertUnauthenticatedPost("/api/games/" + randomGameId + "/play-card",
+				"{\"cardId\":\"" + UUID.randomUUID() + "\"}");
+		assertUnauthenticatedPost("/api/games/" + randomGameId + "/attack",
+				"{\"attackerInstanceId\":\"" + UUID.randomUUID() + "\",\"targetId\":\"ENEMY_HERO\"}");
+		assertUnauthenticatedPost("/api/games/" + randomGameId + "/end-turn", null);
+		assertUnauthenticatedPost("/api/games/" + randomGameId + "/surrender", null);
+	}
+
+	@Test
 	@SuppressWarnings("unchecked")
 	void createAiGameReturnsCreatedGameState() throws Exception {
 		String accessToken = registerAndGetAccessToken();
@@ -235,6 +247,21 @@ class GameControllerIT {
 		HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 		assertEquals(201, response.statusCode());
 		return OBJECT_MAPPER.readValue(response.body(), Map.class);
+	}
+
+	private void assertUnauthenticatedPost(String path, String body) throws Exception {
+		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
+				.uri(URI.create(url(path)));
+
+		if (body != null) {
+			requestBuilder.header(HttpHeaders.CONTENT_TYPE, "application/json");
+			requestBuilder.POST(HttpRequest.BodyPublishers.ofString(body));
+		} else {
+			requestBuilder.POST(HttpRequest.BodyPublishers.noBody());
+		}
+
+		HttpResponse<String> response = HTTP_CLIENT.send(requestBuilder.build(), HttpResponse.BodyHandlers.ofString());
+		assertEquals(403, response.statusCode());
 	}
 
 	@SuppressWarnings("unchecked")

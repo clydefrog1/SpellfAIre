@@ -1,6 +1,7 @@
 import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 
 import { GameBoard } from './game-board';
 import {
@@ -169,6 +170,7 @@ describe('GameBoard Grim Bargain targeting', () => {
     await TestBed.configureTestingModule({
       imports: [GameBoard],
       providers: [
+        provideNoopAnimations(),
         { provide: GameService, useValue: gameService },
         {
           provide: Router,
@@ -210,5 +212,38 @@ describe('GameBoard Grim Bargain targeting', () => {
     fixture.componentInstance.onMyCreatureClick(myCreature('friendly-1'));
 
     expect(fixture.componentInstance.selectedTargetId()).toBe('friendly-1');
+  });
+
+  it('blocks attacking enemy hero while a guard creature is present', () => {
+    const fixture = TestBed.createComponent(GameBoard);
+    fixture.detectChanges();
+
+    const gameWithGuard: GameResponse = {
+      ...makeGame(),
+      player1State: makePlayerState('p1', [myCreature('attacker-1')], ['ember-bolt']),
+      player2State: makePlayerState('p2', [{ ...enemyCreature('guard-1'), keywords: ['GUARD'] }], []),
+    };
+
+    gameService.setGame(gameWithGuard);
+    fixture.detectChanges();
+
+    fixture.componentInstance.onMyCreatureClick(myCreature('attacker-1'));
+    fixture.componentInstance.onEnemyHeroClick();
+
+    expect(fixture.componentInstance.selectedTargetId()).toBe('ENEMY_HERO');
+    expect(fixture.componentInstance.readyToAttack()).toBeFalse();
+    expect(fixture.componentInstance.attackButtonTooltip()).toContain('Must attack a Guard creature first');
+  });
+
+  it('prevents selecting friendly hero for damage spells', () => {
+    const fixture = TestBed.createComponent(GameBoard);
+    fixture.detectChanges();
+
+    fixture.componentInstance.onHandCardClick(emberBolt);
+    fixture.componentInstance.onMyHeroClick();
+
+    expect(fixture.componentInstance.targetMode()).toBe('spell');
+    expect(fixture.componentInstance.selectedTargetId()).toBeNull();
+    expect(fixture.componentInstance.spellDisallowsFriendlyTargets()).toBeTrue();
   });
 });

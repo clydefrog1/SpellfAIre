@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.time.Instant;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.spellfaire.spellfairebackend.auth.repo.UserRepository;
+import com.spellfaire.spellfairebackend.auth.model.User;
 import com.spellfaire.spellfairebackend.game.dto.AttackRequest;
+import com.spellfaire.spellfairebackend.game.dto.CreateAiGameRequest;
 import com.spellfaire.spellfairebackend.game.dto.GameActionResponse;
 import com.spellfaire.spellfairebackend.game.dto.GameEvent;
 import com.spellfaire.spellfairebackend.game.dto.PlayCardRequest;
@@ -36,12 +40,15 @@ import com.spellfaire.spellfairebackend.game.model.BoardCreature;
 import com.spellfaire.spellfairebackend.game.model.Card;
 import com.spellfaire.spellfairebackend.game.model.CardType;
 import com.spellfaire.spellfairebackend.game.model.CardZone;
+import com.spellfaire.spellfairebackend.game.model.Deck;
+import com.spellfaire.spellfairebackend.game.model.DeckCard;
 import com.spellfaire.spellfairebackend.game.model.Faction;
 import com.spellfaire.spellfairebackend.game.model.Game;
 import com.spellfaire.spellfairebackend.game.model.GamePhase;
 import com.spellfaire.spellfairebackend.game.model.GamePlayerState;
 import com.spellfaire.spellfairebackend.game.model.GameStatus;
 import com.spellfaire.spellfairebackend.game.model.Keyword;
+import com.spellfaire.spellfairebackend.game.model.MagicSchool;
 import com.spellfaire.spellfairebackend.game.model.PlayerZoneCard;
 import com.spellfaire.spellfairebackend.game.model.Status;
 import com.spellfaire.spellfairebackend.game.repo.GameRepository;
@@ -325,6 +332,636 @@ class GameplayServiceTest {
 		assertEquals(0, witheredCreature.getTemporaryAttackDebuff());
 	}
 
+	@Test
+	void playCardAllowsDarkTouchOnFriendlyHeroTarget() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState playerState = game.getPlayer1State();
+		GamePlayerState opponentState = game.getPlayer2State();
+		playerState.setCurrentMana(3);
+
+		Card darkTouch = new Card();
+		darkTouch.setId(UUID.randomUUID());
+		darkTouch.setName("Dark Touch");
+		darkTouch.setCardType(CardType.SPELL);
+		darkTouch.setCost(1);
+		PlayerZoneCard handSpell = new PlayerZoneCard(playerState, darkTouch, CardZone.HAND, 0);
+		playerState.getZoneCards().add(handSpell);
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(darkTouch.getId().toString());
+		request.setTargetId("FRIENDLY_HERO");
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+		when(spellResolver.resolveSpell(eq(darkTouch), eq(playerState), eq(opponentState), eq("FRIENDLY_HERO")))
+			.thenReturn(new ArrayList<>());
+
+		GameActionResponse response = gameplayService.playCard(game.getId(), game.getPlayer1Id(), request);
+
+		assertNotNull(response);
+		assertEquals(2, playerState.getCurrentMana());
+		assertEquals(CardZone.DISCARD, handSpell.getZone());
+	}
+
+	@Test
+	void playCardRejectsWitherWhenTargetIsFriendlyCreature() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState playerState = game.getPlayer1State();
+		playerState.setCurrentMana(3);
+
+		Card wither = new Card();
+		wither.setId(UUID.randomUUID());
+		wither.setName("Wither");
+		wither.setCardType(CardType.SPELL);
+		wither.setCost(2);
+		PlayerZoneCard handSpell = new PlayerZoneCard(playerState, wither, CardZone.HAND, 0);
+		playerState.getZoneCards().add(handSpell);
+
+		BoardCreature friendlyTarget = creature(playerState, "Friendly Target", 2, 2, Set.of());
+		playerState.getBattlefield().add(friendlyTarget);
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(wither.getId().toString());
+		request.setTargetId(friendlyTarget.getId().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.playCard(game.getId(), game.getPlayer1Id(), request));
+		assertEquals(3, playerState.getCurrentMana());
+		assertEquals(CardZone.HAND, handSpell.getZone());
+	}
+
+	@Test
+	void pickAiSpellTargetSelectsFrozenTargetForShatter() {
+		GamePlayerState aiState = new GamePlayerState();
+		GamePlayerState humanState = new GamePlayerState();
+
+		BoardCreature frozen = creature(humanState, "Frozen Target", 2, 4, Set.of());
+		frozen.setStatuses(new HashSet<>(Set.of(Status.FROZEN)));
+		humanState.getBattlefield().add(frozen);
+
+		Card shatter = new Card();
+		shatter.setId(UUID.randomUUID());
+		shatter.setName("Shatter");
+		shatter.setCardType(CardType.SPELL);
+
+		String targetId = gameplayService.pickAiSpellTarget(shatter, aiState, humanState);
+
+		assertEquals(frozen.getId().toString(), targetId);
+	}
+
+	@Test
+	void pickAiSpellTargetSelectsHighestEligibleTargetForVoidSnare() {
+		GamePlayerState aiState = new GamePlayerState();
+		GamePlayerState humanState = new GamePlayerState();
+
+		BoardCreature lowCost = creature(humanState, "Low", 2, 2, Set.of());
+		lowCost.getCard().setCost(3);
+		BoardCreature highestAllowed = creature(humanState, "Highest Allowed", 3, 3, Set.of());
+		highestAllowed.getCard().setCost(5);
+		BoardCreature tooExpensive = creature(humanState, "Too Expensive", 7, 7, Set.of());
+		tooExpensive.getCard().setCost(8);
+		humanState.getBattlefield().add(lowCost);
+		humanState.getBattlefield().add(highestAllowed);
+		humanState.getBattlefield().add(tooExpensive);
+
+		Card voidSnare = new Card();
+		voidSnare.setId(UUID.randomUUID());
+		voidSnare.setName("Void Snare");
+		voidSnare.setCardType(CardType.SPELL);
+
+		String targetId = gameplayService.pickAiSpellTarget(voidSnare, aiState, humanState);
+
+		assertEquals(highestAllowed.getId().toString(), targetId);
+	}
+
+	@Test
+	void pickAiSpellTargetForEmberBoltChoosesWeakestKillableCreature() {
+		GamePlayerState aiState = new GamePlayerState();
+		GamePlayerState humanState = new GamePlayerState();
+
+		BoardCreature sturdy = creature(humanState, "Sturdy", 4, 4, Set.of());
+		BoardCreature weak = creature(humanState, "Weak", 1, 2, Set.of());
+		humanState.getBattlefield().add(sturdy);
+		humanState.getBattlefield().add(weak);
+
+		Card emberBolt = new Card();
+		emberBolt.setId(UUID.randomUUID());
+		emberBolt.setName("Ember Bolt");
+		emberBolt.setCardType(CardType.SPELL);
+
+		String targetId = gameplayService.pickAiSpellTarget(emberBolt, aiState, humanState);
+
+		assertEquals(weak.getId().toString(), targetId);
+	}
+
+	@Test
+	void createAiGameThrowsWhenUserMissing() {
+		String playerId = UUID.randomUUID().toString();
+		CreateAiGameRequest request = new CreateAiGameRequest();
+		request.setFaction(Faction.KINGDOM);
+		request.setMagicSchool(MagicSchool.FIRE);
+
+		when(userRepository.findById(UUID.fromString(playerId))).thenReturn(Optional.empty());
+
+		assertThrows(IllegalArgumentException.class, () -> gameplayService.createAiGame(playerId, request));
+	}
+
+	@Test
+	void createAiGameBuildsAndSavesInProgressGame() {
+		String playerId = UUID.randomUUID().toString();
+		User user = new User();
+		user.setId(UUID.fromString(playerId));
+
+		CreateAiGameRequest request = new CreateAiGameRequest();
+		request.setFaction(Faction.KINGDOM);
+		request.setMagicSchool(MagicSchool.FIRE);
+
+		Deck playerDeck = deck("Player Deck", user, Faction.KINGDOM, MagicSchool.FIRE);
+		Deck aiDeck = deck("AI Deck", user, Faction.WILDCLAN, MagicSchool.FROST);
+
+		when(userRepository.findById(UUID.fromString(playerId))).thenReturn(Optional.of(user));
+		when(deckService.buildAutoDeck(any(User.class), any(Faction.class), any(MagicSchool.class)))
+			.thenReturn(playerDeck, aiDeck);
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> {
+			Game g = invocation.getArgument(0);
+			if (g.getId() == null) {
+				g.setId(UUID.randomUUID());
+			}
+			return g;
+		});
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+		when(creatureResolver.resolveStartOfTurn(any(GamePlayerState.class), any(GamePlayerState.class)))
+			.thenReturn(Collections.emptyList());
+
+		GameActionResponse response = gameplayService.createAiGame(playerId, request);
+
+		assertNotNull(response);
+		assertNotNull(response.getEvents());
+		verify(deckService, times(2)).buildAutoDeck(any(User.class), any(Faction.class), any(MagicSchool.class));
+	}
+
+	@Test
+	void playCardRejectsWhenGameFinished() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.FINISHED);
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(UUID.randomUUID().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.playCard(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void playCardRejectsWhenNotPlayersTurn() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPlayerId(game.getPlayer2Id());
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(UUID.randomUUID().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.playCard(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void playCardRejectsWhenNotMainPhase() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.DRAW);
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(UUID.randomUUID().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.playCard(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void endTurnRunsAiThenReturnsTurnToPlayerOne() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPlayerId(game.getPlayer1Id());
+		game.setTurnNumber(1);
+		game.setPlayer2Id("AI");
+		game.getPlayer2State().setUserId("AI");
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+		when(creatureResolver.resolveStartOfTurn(any(GamePlayerState.class), any(GamePlayerState.class)))
+			.thenReturn(Collections.emptyList());
+		when(aiService.executeTurn(any(Game.class))).thenReturn(Collections.emptyList());
+
+		GameActionResponse response = gameplayService.endTurn(game.getId(), game.getPlayer1Id());
+
+		assertNotNull(response);
+		assertEquals(game.getPlayer1Id(), game.getCurrentPlayerId());
+		assertEquals(3, game.getTurnNumber());
+	}
+
+	@Test
+	void surrenderMarksGameFinishedWithOpponentWinner() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+
+		GameActionResponse response = gameplayService.surrender(game.getId(), game.getPlayer1Id());
+
+		assertNotNull(response);
+		assertEquals(GameStatus.FINISHED, game.getGameStatus());
+		assertEquals(game.getPlayer2Id(), game.getWinnerId());
+		assertEquals(GameEvent.EventType.GAME_OVER, response.getEvents().getFirst().getType());
+	}
+
+	@Test
+	void surrenderRejectsAlreadyFinishedGame() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.FINISHED);
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.surrender(game.getId(), game.getPlayer1Id()));
+	}
+
+	@Test
+	void attackRejectsWhenAttackerCannotAttack() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		BoardCreature attacker = creature(attackerState, "Sleepy", 2, 2, Set.of());
+		attacker.setCanAttack(false);
+		attackerState.getBattlefield().add(attacker);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId("ENEMY_HERO");
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.attack(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void attackRejectsWhenAttackerIsFrozenThisTurn() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		BoardCreature attacker = creature(attackerState, "Frozen", 2, 2, Set.of());
+		attacker.setCanAttack(true);
+		attacker.setFrozenBlocksAttacksThisTurn(true);
+		attackerState.getBattlefield().add(attacker);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId("ENEMY_HERO");
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.attack(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void attackHeroWithLifestealHealsAttackingHero() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		GamePlayerState defenderState = game.getPlayer2State();
+		attackerState.setHeroHealth(10);
+
+		BoardCreature attacker = creature(attackerState, "Vampire", 3, 3, Set.of(Keyword.LIFESTEAL));
+		attacker.setCanAttack(true);
+		attackerState.getBattlefield().add(attacker);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId("ENEMY_HERO");
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+
+		GameActionResponse response = gameplayService.attack(game.getId(), game.getPlayer1Id(), request);
+
+		assertNotNull(response);
+		assertEquals(22, defenderState.getHeroHealth());
+		verify(spellResolver).healHero(eq(attackerState), eq(3), anyList(), eq("Vampire (Lifesteal)"));
+	}
+
+	@Test
+	void attackRejectsNonGuardTargetWhenGuardExists() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		GamePlayerState defenderState = game.getPlayer2State();
+
+		BoardCreature attacker = creature(attackerState, "Raider", 3, 3, Set.of());
+		attacker.setCanAttack(true);
+		attackerState.getBattlefield().add(attacker);
+
+		BoardCreature guard = creature(defenderState, "Defender", 1, 5, Set.of(Keyword.GUARD));
+		BoardCreature nonGuard = creature(defenderState, "Archer", 2, 2, Set.of());
+		defenderState.getBattlefield().add(guard);
+		defenderState.getBattlefield().add(nonGuard);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId(nonGuard.getId().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.attack(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void attackCreatureKillsBothAndRunsDeathTriggers() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		GamePlayerState defenderState = game.getPlayer2State();
+
+		BoardCreature attacker = creature(attackerState, "Brute", 4, 4, Set.of());
+		attacker.setCanAttack(true);
+		attackerState.getBattlefield().add(attacker);
+
+		BoardCreature defender = creature(defenderState, "Wall", 4, 4, Set.of());
+		defenderState.getBattlefield().add(defender);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId(defender.getId().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+		when(spellResolver.applyDamageToCreature(eq(defender), eq(4), anyList(), eq("Brute"))).thenAnswer(invocation -> {
+			defender.setHealth(0);
+			return 4;
+		});
+		when(spellResolver.applyDamageToCreature(eq(attacker), eq(4), anyList(), eq("Wall"))).thenAnswer(invocation -> {
+			attacker.setHealth(0);
+			return 4;
+		});
+		when(creatureResolver.resolveWhenDies(eq(defender), eq(defenderState), eq(attackerState)))
+				.thenReturn(Collections.emptyList());
+		when(creatureResolver.resolveWhenDies(eq(attacker), eq(attackerState), eq(defenderState)))
+				.thenReturn(Collections.emptyList());
+
+		GameActionResponse response = gameplayService.attack(game.getId(), game.getPlayer1Id(), request);
+
+		assertNotNull(response);
+		assertTrue(attackerState.getZoneCards().stream()
+				.anyMatch(c -> c.getZone() == CardZone.DISCARD && c.getCard().getId().equals(attacker.getCard().getId())));
+		assertTrue(defenderState.getZoneCards().stream()
+				.anyMatch(c -> c.getZone() == CardZone.DISCARD && c.getCard().getId().equals(defender.getCard().getId())));
+		verify(creatureResolver).resolveWhenDies(eq(attacker), eq(attackerState), eq(defenderState));
+		verify(creatureResolver).resolveWhenDies(eq(defender), eq(defenderState), eq(attackerState));
+		verify(spellResolver, never()).healHero(eq(attackerState), eq(4), anyList(), any());
+	}
+
+	@Test
+	void playCardRejectsWhenCardNotInHand() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(UUID.randomUUID().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.playCard(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void playCardCreatureRejectsWhenBattlefieldIsFull() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState playerState = game.getPlayer1State();
+		playerState.setCurrentMana(10);
+
+		Card creatureCard = new Card();
+		creatureCard.setId(UUID.randomUUID());
+		creatureCard.setName("Reserve Soldier");
+		creatureCard.setCardType(CardType.CREATURE);
+		creatureCard.setCost(2);
+		creatureCard.setAttack(2);
+		creatureCard.setHealth(2);
+		PlayerZoneCard handCreature = new PlayerZoneCard(playerState, creatureCard, CardZone.HAND, 0);
+		playerState.getZoneCards().add(handCreature);
+
+		for (int i = 0; i < 6; i++) {
+			playerState.getBattlefield().add(creature(playerState, "Existing " + i, 1, 1, Set.of()));
+		}
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(creatureCard.getId().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.playCard(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void attackRejectsWhenCreatureAlreadyAttackedThisTurn() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		BoardCreature attacker = creature(attackerState, "Spent", 3, 2, Set.of());
+		attacker.setCanAttack(true);
+		attacker.setHasAttackedThisTurn(true);
+		attackerState.getBattlefield().add(attacker);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId("ENEMY_HERO");
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.attack(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void attackRejectsWhenTargetCreatureNotFound() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		BoardCreature attacker = creature(attackerState, "Hunter", 3, 3, Set.of());
+		attacker.setCanAttack(true);
+		attackerState.getBattlefield().add(attacker);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId(UUID.randomUUID().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.attack(game.getId(), game.getPlayer1Id(), request));
+	}
+
+	@Test
+	void attackCreatureDefenderLifestealHealsDefendingHero() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState attackerState = game.getPlayer1State();
+		GamePlayerState defenderState = game.getPlayer2State();
+		defenderState.setHeroHealth(12);
+
+		BoardCreature attacker = creature(attackerState, "Knight", 3, 3, Set.of());
+		attacker.setCanAttack(true);
+		attackerState.getBattlefield().add(attacker);
+
+		BoardCreature defender = creature(defenderState, "Leech", 2, 4, Set.of(Keyword.LIFESTEAL));
+		defenderState.getBattlefield().add(defender);
+
+		AttackRequest request = new AttackRequest();
+		request.setAttackerInstanceId(attacker.getId().toString());
+		request.setTargetId(defender.getId().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+		when(spellResolver.applyDamageToCreature(eq(defender), eq(3), anyList(), eq("Knight"))).thenReturn(3);
+		when(spellResolver.applyDamageToCreature(eq(attacker), eq(2), anyList(), eq("Leech"))).thenReturn(2);
+
+		GameActionResponse response = gameplayService.attack(game.getId(), game.getPlayer1Id(), request);
+
+		assertNotNull(response);
+		verify(spellResolver).healHero(eq(defenderState), eq(2), anyList(), eq("Leech (Lifesteal)"));
+	}
+
+	@Test
+	void playCardRejectsWhenNotEnoughMana() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState playerState = game.getPlayer1State();
+		playerState.setCurrentMana(1);
+
+		Card expensiveCreature = new Card();
+		expensiveCreature.setId(UUID.randomUUID());
+		expensiveCreature.setName("Ancient Dragon");
+		expensiveCreature.setCardType(CardType.CREATURE);
+		expensiveCreature.setCost(8);
+		expensiveCreature.setAttack(8);
+		expensiveCreature.setHealth(8);
+		PlayerZoneCard handCard = new PlayerZoneCard(playerState, expensiveCreature, CardZone.HAND, 0);
+		playerState.getZoneCards().add(handCard);
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(expensiveCreature.getId().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+
+		assertThrows(IllegalArgumentException.class,
+				() -> gameplayService.playCard(game.getId(), game.getPlayer1Id(), request));
+		assertEquals(1, playerState.getCurrentMana());
+	}
+
+	@Test
+	void playCardCreatureWithChargeCanAttackImmediately() {
+		Game game = baseGame();
+		game.setId(UUID.randomUUID());
+		game.setGameStatus(GameStatus.IN_PROGRESS);
+		game.setCurrentPhase(GamePhase.MAIN);
+
+		GamePlayerState playerState = game.getPlayer1State();
+		GamePlayerState opponentState = game.getPlayer2State();
+		playerState.setCurrentMana(5);
+
+		Card charger = new Card();
+		charger.setId(UUID.randomUUID());
+		charger.setName("Storm Rider");
+		charger.setCardType(CardType.CREATURE);
+		charger.setCost(3);
+		charger.setAttack(4);
+		charger.setHealth(2);
+		charger.setKeywords(new HashSet<>(Set.of(Keyword.CHARGE)));
+		PlayerZoneCard handCard = new PlayerZoneCard(playerState, charger, CardZone.HAND, 0);
+		playerState.getZoneCards().add(handCard);
+
+		PlayCardRequest request = new PlayCardRequest();
+		request.setCardId(charger.getId().toString());
+
+		when(gameRepository.findById(game.getId())).thenReturn(Optional.of(game));
+		when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(gameService.toGameResponse(any(Game.class))).thenReturn(null);
+		when(creatureResolver.resolveWhenPlayed(any(BoardCreature.class), eq(playerState), eq(opponentState), any()))
+				.thenReturn(Collections.emptyList());
+
+		GameActionResponse response = gameplayService.playCard(game.getId(), game.getPlayer1Id(), request);
+
+		assertNotNull(response);
+		assertEquals(1, playerState.getBattlefield().size());
+		assertTrue(playerState.getBattlefield().getFirst().isCanAttack());
+		verify(creatureResolver).resolveWhenPlayed(any(BoardCreature.class), eq(playerState), eq(opponentState), any());
+	}
+
 	private static Game baseGame() {
 		Game game = new Game();
 		game.setPlayer1Id(UUID.randomUUID().toString());
@@ -353,5 +990,36 @@ class GameplayServiceTest {
 				owner.getBattlefield().size());
 		creature.setId(UUID.randomUUID());
 		return creature;
+	}
+
+	private static Deck deck(String name, User owner, Faction faction, MagicSchool school) {
+		Deck deck = new Deck();
+		deck.setId(UUID.randomUUID());
+		deck.setName(name);
+		deck.setUser(owner);
+		deck.setFaction(faction);
+		deck.setMagicSchool(school);
+		deck.setCreatedAt(Instant.now());
+		deck.setUpdatedAt(Instant.now());
+
+		Card c1 = new Card();
+		c1.setId(UUID.randomUUID());
+		c1.setName(name + " Creature");
+		c1.setCardType(CardType.CREATURE);
+		c1.setCost(1);
+		c1.setAttack(1);
+		c1.setHealth(2);
+		c1.setFaction(faction);
+		deck.getDeckCards().add(new DeckCard(deck, c1, 4));
+
+		Card c2 = new Card();
+		c2.setId(UUID.randomUUID());
+		c2.setName(name + " Spell");
+		c2.setCardType(CardType.SPELL);
+		c2.setCost(1);
+		c2.setSchool(school);
+		deck.getDeckCards().add(new DeckCard(deck, c2, 4));
+
+		return deck;
 	}
 }
