@@ -11,6 +11,7 @@
     "test:e2e:all:auto:reset": "node scripts/test-e2e-all.mjs --autostart --reset-db",
     "test:e2e:down": "node scripts/test-e2e-down.mjs",
     "test:e2e:reset": "node scripts/test-e2e-reset.mjs",
-    "test:all": "npm run test:backend && npm run test:frontend && npm run test:e2e"
+    "test:all": "npm run test:backend && npm run test:frontend && npm run test:e2e",
+    "docs:screenshots": "npm --prefix frontend run e2e:screenshots"
   }
 }

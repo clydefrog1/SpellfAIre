@@ -1,5 +1,7 @@
 # Spellfaire
 
+For full-stack setup (backend + MySQL + e2e runners), see the monorepo README: [../README.md](../README.md).
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.4.
 
 ## Development server
@@ -56,6 +58,12 @@ Run mocked API e2e suite:
 
 ```bash
 npm run e2e:mock
+```
+
+Generate the committed README screenshots (writes to `../docs/screenshots/`):
+
+```bash
+npm run e2e:screenshots
 ```
 
 Run real-backend e2e suite (requires backend on `http://localhost:8080`):

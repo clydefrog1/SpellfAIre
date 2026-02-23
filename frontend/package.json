@@ -10,6 +10,7 @@
     "e2e": "playwright test",
     "e2e:real": "playwright test --project=real-backend",
     "e2e:mock": "playwright test --project=mocked-api",
+    "e2e:screenshots": "playwright test e2e/docs-screenshots.mock.spec.ts --project=mocked-api",
     "e2e:install": "playwright install --with-deps chromium"
   },
   "prettier": {

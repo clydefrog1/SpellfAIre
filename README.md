@@ -1,9 +1,36 @@
 # SpellfAIre
 
-Monorepo:
+SpellfAIre is a turn-based, web-friendly card battler (currently: **single-player vs AI**) inspired by collectible card games, aiming to be simpler and faster to iterate on.
+
+This repo is a monorepo:
 - `backend/`: Spring Boot (Spring Security) + MySQL
 - `frontend/`: Angular SPA
-- `infra/`: local development infrastructure (MySQL + phpMyAdmin)
+- `infra/`: Local development infrastructure (MySQL + phpMyAdmin)
+
+## Screenshots
+
+> These images are generated from the Playwright mocked-api suite and committed under `docs/screenshots/`.
+
+### Login
+![Login](docs/screenshots/login.png)
+
+### Register
+![Register](docs/screenshots/register.png)
+
+### Home
+![Home](docs/screenshots/home.png)
+
+### Game Info
+![Game Info](docs/screenshots/game-info.png)
+
+### Card Library
+![Card Library](docs/screenshots/card-library.png)
+
+### New Game Setup
+![Game Setup](docs/screenshots/game-setup.png)
+
+### Game Board
+![Game Board](docs/screenshots/game-board.png)
 
 ## Prereqs
 - Java 21
@@ -76,6 +103,16 @@ npm run e2e:real
 
 - `e2e:mock` validates UI flows with mocked API endpoints.
 - `e2e:real` validates full-stack flow against a running backend on `http://localhost:8080`.
+
+### Documentation screenshots
+
+Regenerate the committed README screenshots:
+
+```powershell
+npm run docs:screenshots
+```
+
+This runs the Playwright mocked-api suite that writes PNGs to `docs/screenshots/`.
 
 ### Root orchestrator scripts (Windows)
 
