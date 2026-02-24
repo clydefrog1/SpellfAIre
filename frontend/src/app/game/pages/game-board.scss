@@ -9,7 +9,7 @@
   box-sizing: border-box;
 
   // Sizing tokens (fluid across desktop resolutions)
-  --sf-divider-height: clamp(64px, 7.2vh, 76px);
+  --sf-divider-height: clamp(60px, 6.5vh, 72px);
   --sf-bf-card-width: clamp(124px, 9.5vw, 148px);
   --sf-bf-card-height: clamp(94px, 9vh, 108px);
 
@@ -91,9 +91,9 @@
 
 .battlefield {
   flex: 0 0 auto;
-  height: 14vh;
-  min-height: 96px;
-  max-height: 120px;
+  height: 13vh;
+  min-height: 92px;
+  max-height: 112px;
   display: flex;
   align-items: center;
   gap: var(--sf-space-sm);
@@ -281,10 +281,10 @@
   align-items: flex-end;
   justify-content: center;
   gap: 0;
-  padding: var(--sf-space-xs) var(--sf-space-sm) var(--sf-space-sm);
-  // Let the hand row expand to fill remaining space so the event bar
-  // can sit directly at the bottom of the viewport.
-  flex: 1 1 auto;
+  padding: var(--sf-space-xs) var(--sf-space-sm) var(--sf-space-xs);
+  // Prevent the hand row from stretching vertically so the total
+  // stack height (including the event bar) fits within 100vh.
+  flex: 0 0 auto;
   background: linear-gradient(0deg,
     rgba(24, 32, 36, 0.5) 0%,
     transparent 100%

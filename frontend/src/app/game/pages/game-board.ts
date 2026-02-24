@@ -237,6 +237,24 @@ export class GameBoard implements OnInit, OnDestroy {
     
     const seen = localStorage.getItem('sf-attack-tutorial-seen');
     this.showTutorialHint.set(!seen);
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/e34a7cf3-665e-4812-8174-2a28eb9eee2c', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: `log_${Date.now()}_layout`,
+        timestamp: Date.now(),
+        runId: 'pre-fix',
+        hypothesisId: 'H1',
+        location: 'game-board.ts:241',
+        message: 'Game board layout metrics',
+        data: {
+          innerHeight: window.innerHeight,
+        },
+      }),
+    }).catch(() => {});
+    // #endregion
   }
 
   ngOnDestroy(): void {
@@ -265,6 +283,48 @@ export class GameBoard implements OnInit, OnDestroy {
     const card = this.selectedSpellCard();
     if (!card) return false;
     return this.requiresFriendlyCreatureTarget(card);
+  });
+
+  // Capture layout metrics whenever events change to understand
+  // when the event bar becomes clipped (H2–H4).
+  private readonly layoutMetricsEffect = effect(() => {
+    const allEvents = this.events();
+    const turnNumber = this.game()?.turnNumber ?? 0;
+
+    // Access inside a microtask so layout has settled.
+    queueMicrotask(() => {
+      const root = document.querySelector('.game-board') as HTMLElement | null;
+      const bar = document.querySelector('.event-bar') as HTMLElement | null;
+      if (!root || !bar) return;
+
+      const rootRect = root.getBoundingClientRect();
+      const barRect = bar.getBoundingClientRect();
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/e34a7cf3-665e-4812-8174-2a28eb9eee2c', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: `log_${Date.now()}_layout_events`,
+          timestamp: Date.now(),
+          runId: 'pre-fix',
+          hypothesisId: 'H2',
+          location: 'game-board.ts:280',
+          message: 'Layout metrics after events update',
+          data: {
+            turnNumber,
+            eventCount: allEvents.length,
+            windowInnerHeight: window.innerHeight,
+            gameBoardHeight: rootRect.height,
+            gameBoardBottom: rootRect.bottom,
+            eventBarHeight: barRect.height,
+            eventBarBottom: barRect.bottom,
+            overflowBelowViewport: rootRect.bottom - window.innerHeight,
+          },
+        }),
+      }).catch(() => {});
+      // #endregion
+    });
   });
 
   private readonly combatFxEffect = effect(() => {

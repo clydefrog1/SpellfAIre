@@ -230,7 +230,10 @@
     font-size: 7.2px;
     line-height: 1.15;
     min-height: 26px;
-    -webkit-line-clamp: 2;
+    max-height: 26px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: block;
   }
 
   .card-rules.empty {
@@ -474,15 +477,14 @@
   background:
     radial-gradient(70px 40px at 15% 20%, rgba(217, 163, 90, 0.12), transparent 60%),
     linear-gradient(145deg, rgba(24, 32, 36, 0.4), rgba(36, 46, 52, 0.22));
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
+  /* Fixed visual height with internal scroll when needed */
   min-height: 44px;
+  max-height: 44px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .card-rules.empty {
-  // keep the same footprint as non-empty rules
   min-height: 44px;
 }
 
